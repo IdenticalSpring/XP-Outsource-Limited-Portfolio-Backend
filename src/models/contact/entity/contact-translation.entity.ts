@@ -1,25 +1,22 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import { Contact } from './contact.entity';
 import { ApiProperty } from '@nestjs/swagger';
 
 @Entity()
-export class Contact {
+export class ContactTranslation {
   @PrimaryGeneratedColumn()
   @ApiProperty()
   id: number;
 
   @Column()
   @ApiProperty()
-  phone: string;
+  language: string;
 
   @Column()
   @ApiProperty()
   address: string;
 
   @Column()
-  @ApiProperty()
-  mail: string;
-
-  @Column({ unique: true })
   @ApiProperty({ description: 'URL-friendly slug for SEO' })
   slug: string;
 
@@ -30,4 +27,8 @@ export class Contact {
   @Column('simple-array')
   @ApiProperty({ description: 'Keywords for SEO' })
   keywords: string[];
+
+  @ManyToOne(() => Contact, (contact) => contact.translations)
+  @ApiProperty()
+  contact: Contact;
 }

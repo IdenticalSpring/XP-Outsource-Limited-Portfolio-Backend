@@ -29,5 +29,12 @@
     "statistics": {
       "ACCESS_RECORDED": "Access recorded successfully",
       "STATS_NOT_FOUND": "Statistics not found for date {date}"
+    },
+    "contact": {
+     "CONTACT_CREATED": "Contact created successfully",
+      "CONTACT_NOT_FOUND": "Contact not found",
+      "TRANSLATION_CREATED": "Contact translation created successfully",
+      "TRANSLATION_NOT_FOUND": "Contact translation for language {lang} not found",
+      "TRANSLATION_ALREADY_EXISTS": "Contact translation for language {lang} already exists"
     }
   }

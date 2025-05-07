@@ -1,21 +1,16 @@
-import { IsString, IsEmail, MaxLength, IsNotEmpty, IsArray } from 'class-validator';
+import { IsString, IsEmail, MaxLength, IsNotEmpty, IsArray, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class CreateContactDto {
+export class ContactTranslationDto {
   @IsString()
   @IsNotEmpty()
   @ApiProperty()
-  phone: string;
+  language: string;
 
   @IsString()
   @IsNotEmpty()
   @ApiProperty()
   address: string;
-
-  @IsEmail()
-  @IsNotEmpty()
-  @ApiProperty()
-  mail: string;
 
   @IsString()
   @IsNotEmpty()
@@ -33,30 +28,35 @@ export class CreateContactDto {
   keywords: string[];
 }
 
+export class CreateContactDto {
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty()
+  phone: string;
+
+  @IsEmail()
+  @IsNotEmpty()
+  @ApiProperty()
+  mail: string;
+
+  @IsArray()
+  @ApiProperty({ type: [ContactTranslationDto] })
+  translations: ContactTranslationDto[];
+}
+
 export class UpdateContactDto {
   @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   phone?: string;
 
-  @IsString()
-  @ApiProperty({ required: false })
-  address?: string;
-
   @IsEmail()
+  @IsOptional()
   @ApiProperty({ required: false })
   mail?: string;
 
-  @IsString()
-  @ApiProperty({ required: false })
-  slug?: string;
-
-  @IsString()
-  @MaxLength(160)
-  @ApiProperty({ required: false })
-  metaDescription?: string;
-
   @IsArray()
-  @IsString({ each: true })
-  @ApiProperty({ required: false })
-  keywords?: string[];
+  @IsOptional()
+  @ApiProperty({ type: [ContactTranslationDto], required: false })
+  translations?: ContactTranslationDto[];
 }

@@ -29,5 +29,12 @@
   "statistics": {
     "ACCESS_RECORDED": "Lượt truy cập được ghi lại thành công",
     "STATS_NOT_FOUND": "Không tìm thấy thống kê cho ngày {date}"
+  },
+  "contact": {
+    "CONTACT_CREATED": "Liên hệ được tạo thành công",
+    "CONTACT_NOT_FOUND": "Không tìm thấy liên hệ",
+    "TRANSLATION_CREATED": "Bản dịch liên hệ được tạo thành công",
+    "TRANSLATION_NOT_FOUND": "Không tìm thấy bản dịch liên hệ cho ngôn ngữ {lang}",
+    "TRANSLATION_ALREADY_EXISTS": "Bản dịch banner cho ngôn ngữ {lang} đã tồn tại"
   }
 }
