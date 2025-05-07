@@ -3,12 +3,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { I18nModule, QueryResolver, AcceptLanguageResolver } from 'nestjs-i18n';
-import { StatisticsModule } from './statistics/statistics.module';
-import { BannerModule } from './banner/banner.module';
-import { BlogModule } from './blog/blog.module';
+import { StatisticsModule } from './models/statistics/statistics.module';
+import { BannerModule } from './models/banner/banner.module';
+import { BlogModule } from './models/blog/blog.module';
 import { ContactModule } from './contact/contact.module';
-import { MemberModule } from './member/member.module';
-import { AdminModule } from './admin/admin.module';
+import { MemberModule } from './models/member/member.module';
+import { AdminModule } from './models/admin/admin.module';
 import * as path from 'path';
 
 @Module({

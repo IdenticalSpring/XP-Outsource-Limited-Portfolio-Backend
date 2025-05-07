@@ -3,7 +3,7 @@ import { ContactService } from './contact.service';
 import { CreateContactDto, UpdateContactDto } from './contact.dto';
 import { Contact } from './contact.entity';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../admin/jwt-auth.guard';
+import { JwtAuthGuard } from '../models/admin/jwt-auth.guard';
 
 @ApiTags('contact')
 @Controller('contact')

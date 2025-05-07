@@ -3,7 +3,7 @@ import { BannerService } from './banner.service';
 import { CreateBannerDto, UpdateBannerDto } from './banner.dto';
 import { Banner } from './banner.entity';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../admin/jwt-auth.guard';
+import { JwtAuthGuard } from '../admin/jwt-auth.guard'; 
 
 @ApiTags('banner')
 @Controller('banner')

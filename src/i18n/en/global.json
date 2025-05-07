@@ -5,5 +5,11 @@
     "UNAUTHORIZED": "Unauthorized access",
     "INVALID_INPUT": "Invalid input data",
     "BLOG_CREATED": "Blog created successfully",
-    "BLOG_NOT_FOUND": "Blog not found"
-  }
+    "BLOG_NOT_FOUND": "Blog not found",
+    "TRANSLATION_CREATED": "Translation created successfully",
+    "TRANSLATION_NOT_FOUND": "Translation for language {{lang}} not found",
+    "TRANSLATION_ALREADY_EXISTS": "Translation for language {{lang}} already exists",
+    "INVALID_LANGUAGE": "Invalid language: {{lang}}. Supported languages: {{supported}}",
+    "INVALID_NUMBER_PARAM": "Invalid {{param}}: must be a positive number",
+    "INVALID_PARAM": "Invalid {{param}}"
+}
