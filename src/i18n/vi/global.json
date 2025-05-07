@@ -1,0 +1,9 @@
+{
+    "WELCOME": "Chào mừng đến với API",
+    "NOT_FOUND": "Tài nguyên không tìm thấy",
+    "WRONG_CREDENTIALS": "Thông tin xác thực không đúng",
+    "UNAUTHORIZED": "Truy cập không được phép",
+    "INVALID_INPUT": "Dữ liệu đầu vào không hợp lệ",
+    "BLOG_CREATED": "Bài blog được tạo thành công",
+    "BLOG_NOT_FOUND": "Bài blog không tìm thấy"
+  }

@@ -5,7 +5,7 @@
   "scripts": {
     "start": "nest start",
     "start:dev": "nest start --watch",
-    "build": "nest build"
+    "build": "nest build && cpy src/i18n dist/i18n --parents"
   },
   "dependencies": {
     "@nestjs/common": "^10.3.9",
@@ -16,6 +16,7 @@
     "@nestjs/swagger": "^7.4.0",
     "@nestjs/jwt": "^10.2.0",
     "@nestjs/passport": "^10.0.3",
+    "nestjs-i18n": "^10.5.1",
     "passport-jwt": "^4.0.1",
     "typeorm": "^0.3.20",
     "mysql2": "^3.11.0",
@@ -31,6 +32,7 @@
     "@nestjs/testing": "^10.3.9",
     "@types/bcrypt": "^5.0.2",
     "@types/passport-jwt": "^4.0.1",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "cpy-cli": "^5.0.0"
   }
 }

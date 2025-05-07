@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Query } from '@nestjs/common';
 import { BlogService } from './blog.service';
 import { CreateBlogDto, UpdateBlogDto } from './blog.dto';
 import { Blog } from './blog.entity';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../admin/jwt-auth.guard';
+import { I18n, I18nContext } from 'nestjs-i18n';
 
 @ApiTags('blog')
 @Controller('blog')
@@ -15,8 +16,13 @@ export class BlogController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create blog' })
   @ApiResponse({ status: 201, type: Blog })
-  create(@Body() dto: CreateBlogDto): Promise<Blog> {
-    return this.blogService.create(dto);
+  async create(@Body() dto: CreateBlogDto, @I18n() i18n: I18nContext): Promise<{ message: string; blog: Blog }> {
+    console.log(`Language from I18nContext: ${i18n.lang}`); // Debug ngôn ngữ
+    const blog = await this.blogService.create(dto);
+    return {
+      message: i18n.t('global.BLOG_CREATED'),
+      blog,
+    };
   }
 
   @Get()
@@ -43,9 +49,9 @@ export class BlogController {
   @Get('sitemap')
   @ApiOperation({ summary: 'Get sitemap for SEO' })
   @ApiResponse({ status: 200 })
-  async getSitemap(): Promise<{ urls: string[] }> {
+  async getSitemap(@Query('lang') lang: string = 'en'): Promise<{ urls: string[] }> {
     const blogs = await this.blogService.findAll();
-    const urls = blogs.map(blog => `https://yourdomain.com/blog/${blog.slug}`);
+    const urls = blogs.map(blog => `https://yourdomain.com/${lang}/blog/${blog.slug}`);
     return { urls };
   }
 

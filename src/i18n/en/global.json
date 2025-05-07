@@ -1,0 +1,9 @@
+{
+    "WELCOME": "Welcome to the API",
+    "NOT_FOUND": "Resource not found",
+    "WRONG_CREDENTIALS": "Wrong credentials",
+    "UNAUTHORIZED": "Unauthorized access",
+    "INVALID_INPUT": "Invalid input data",
+    "BLOG_CREATED": "Blog created successfully",
+    "BLOG_NOT_FOUND": "Blog not found"
+  }
