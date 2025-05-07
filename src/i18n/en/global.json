@@ -17,7 +17,8 @@
       "BLOG_NOT_FOUND": "Blog not found",
       "TRANSLATION_CREATED": "Translation created successfully",
       "TRANSLATION_NOT_FOUND": "Translation for language {lang} not found",
-      "TRANSLATION_ALREADY_EXISTS": "Translation for language {lang} already exists"
+      "TRANSLATION_ALREADY_EXISTS": "Translation for language {lang} already exists",
+      "TRANSLATION_DELETED": "Translation for language {lang} deleted successfully"
     },
     "banner": {
       "BANNER_CREATED": "Banner created successfully",
@@ -31,10 +32,11 @@
       "STATS_NOT_FOUND": "Statistics not found for date {date}"
     },
     "contact": {
-     "CONTACT_CREATED": "Contact created successfully",
+      "CONTACT_CREATED": "Contact created successfully",
       "CONTACT_NOT_FOUND": "Contact not found",
       "TRANSLATION_CREATED": "Contact translation created successfully",
       "TRANSLATION_NOT_FOUND": "Contact translation for language {lang} not found",
-      "TRANSLATION_ALREADY_EXISTS": "Contact translation for language {lang} already exists"
+      "TRANSLATION_ALREADY_EXISTS": "Contact translation for language {lang} already exists",
+      "TRANSLATION_DELETED": "Contact translation for language {lang} deleted successfully"
     }
   }

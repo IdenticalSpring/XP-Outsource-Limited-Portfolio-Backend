@@ -109,26 +109,6 @@ export class BlogService {
     }
   }
 
-  async removeTranslationByLanguage(blogId: number, dto: DeleteTranslationDto): Promise<void> {
-    if (isNaN(blogId) || blogId <= 0) {
-      this.logger.warn(`Invalid blogId: ${blogId}`);
-      throw new BadRequestException(this.i18n.t('global.global.INVALID_NUMBER_PARAM', { args: { param: 'blogId' } }));
-    }
-    try {
-      const blog = await this.findOne(blogId);
-      const translation = blog.translations.find((t) => t.language === dto.language);
-      if (!translation) {
-        throw new NotFoundException(this.i18n.t('global.blog.TRANSLATION_NOT_FOUND'));
-      }
-      await this.translationRepository.remove(translation);
-    } catch (error) {
-      this.logger.error(`Error removing translation for language ${dto.language} in blog ${blogId}: ${error.message}`, error.stack);
-      throw error instanceof BadRequestException || error instanceof NotFoundException
-        ? error
-        : new BadRequestException(this.i18n.t('global.global.INTERNAL_ERROR'));
-    }
-  }
-
   async findAll(page: number = 1, limit: number = 10): Promise<{ blogs: Blog[]; total: number }> {
     this.logger.log(`Fetching blogs: page=${page}, limit=${limit}`);
     try {
@@ -311,6 +291,45 @@ export class BlogService {
     } catch (error) {
       this.logger.error(`Error generating sitemap for ${lang}: ${error.message}`, error.stack);
       throw error instanceof BadRequestException ? error : new BadRequestException(this.i18n.t('global.global.INTERNAL_ERROR'));
+    }
+  }
+  async removeTranslationByLanguage(blogId: number, language: string): Promise<void> {
+    this.logger.debug(`Attempting to delete translation for blogId=${blogId}, language=${language}`);
+    if (isNaN(blogId) || blogId <= 0) {
+      this.logger.warn(`Invalid blogId: ${blogId}`);
+      throw new BadRequestException(
+        this.i18n.t('global.global.INVALID_NUMBER_PARAM', { args: { param: 'blogId' } })
+      );
+    }
+    if (!SUPPORTED_LANGUAGES.includes(language as typeof SUPPORTED_LANGUAGES[number])) {
+      this.logger.warn(`Invalid language: ${language}`);
+      throw new BadRequestException(
+        this.i18n.t('global.global.INVALID_LANGUAGE', {
+          args: { lang: language, supported: SUPPORTED_LANGUAGES.join(', ') },
+        })
+      );
+    }
+    try {
+      const translation = await this.translationRepository.findOne({
+        where: { blog: { id: blogId }, language },
+        relations: ['blog'],
+      });
+      if (!translation) {
+        this.logger.warn(`Translation not found: blogId=${blogId}, language=${language}`);
+        throw new NotFoundException(
+          this.i18n.t('global.blog.TRANSLATION_NOT_FOUND', { args: { lang: language } })
+        );
+      }
+      await this.translationRepository.remove(translation);
+      this.logger.log(`Deleted translation for blogId=${blogId}, language=${language}`);
+    } catch (error) {
+      this.logger.error(
+        `Error deleting translation for blogId=${blogId}, language=${language}: ${error.message}`,
+        error.stack
+      );
+      throw error instanceof BadRequestException || error instanceof NotFoundException
+        ? error
+        : new BadRequestException(this.i18n.t('global.global.INTERNAL_ERROR'));
     }
   }
 }

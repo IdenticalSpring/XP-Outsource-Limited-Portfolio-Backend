@@ -19,141 +19,6 @@ export class BannerService {
     private i18n: I18nService,
   ) {}
 
-  async deleteTranslation(translationId: number, language: string): Promise<void> {
-    if (isNaN(translationId) || translationId <= 0) {
-      this.logger.warn(`Invalid translationId: ${translationId}`);
-      throw new BadRequestException(
-        this.i18n.t('global.global.INVALID_NUMBER_PARAM', { args: { param: 'translationId' } })
-      );
-    }
-    if (!SUPPORTED_LANGUAGES.includes(language as typeof SUPPORTED_LANGUAGES[number])) {
-      this.logger.warn(`Invalid language: ${language}`);
-      throw new BadRequestException(
-        this.i18n.t('global.global.INVALID_LANGUAGE', {
-          args: { lang: language, supported: SUPPORTED_LANGUAGES.join(', ') },
-        })
-      );
-    }
-    try {
-      const translation = await this.translationRepository.findOne({
-        where: { id: translationId, language },
-        relations: ['banner'],
-      });
-      if (!translation) {
-        throw new NotFoundException(
-          this.i18n.t('global.banner.TRANSLATION_NOT_FOUND', { args: { lang: language } })
-        );
-      }
-      await this.translationRepository.remove(translation);
-      this.logger.log(`Deleted translation id=${translationId} for language=${language}`);
-    } catch (error) {
-      this.logger.error(
-        `Error deleting translation id=${translationId} for language=${language}: ${error.message}`,
-        error.stack
-      );
-      throw error instanceof BadRequestException || error instanceof NotFoundException
-        ? error
-        : new BadRequestException(this.i18n.t('global.global.INTERNAL_ERROR'));
-    }
-  }
-
-  async getSitemap(lang: string = 'en'): Promise<{ urls: string[] }> {
-    this.logger.log(`Generating sitemap for banners: ${lang}`);
-    if (!SUPPORTED_LANGUAGES.includes(lang as typeof SUPPORTED_LANGUAGES[number])) {
-      this.logger.warn(`Invalid language: ${lang}`);
-      throw new BadRequestException(
-        this.i18n.t('global.global.INVALID_LANGUAGE', {
-          args: { lang, supported: SUPPORTED_LANGUAGES.join(', ') },
-        })
-      );
-    }
-    try {
-      const banners = await this.bannerRepository.find({ relations: ['translations'] });
-      this.logger.debug(`Found ${banners.length} banners: ${JSON.stringify(banners.map(b => ({ id: b.id, slug: b.slug })))}`);
-
-      const urls = banners
-        .filter((banner) => {
-          // Kiểm tra id và slug
-          if (
-            !banner.id ||
-            isNaN(banner.id) ||
-            banner.id <= 0 ||
-            !banner.slug ||
-            typeof banner.slug !== 'string' ||
-            banner.slug.trim() === ''
-          ) {
-            this.logger.warn(`Invalid banner data: id=${banner.id}, slug=${banner.slug}`);
-            return false;
-          }
-
-          // Kiểm tra translations
-          const translations = banner.translations || [];
-          if (!translations.length) {
-            this.logger.debug(`Banner ${banner.slug} has no translations`);
-            return false;
-          }
-
-          const hasValidTranslation = translations.some((t) => {
-            const isValid =
-              t.language === lang &&
-              t.id &&
-              !isNaN(t.id) &&
-              t.id > 0 &&
-              typeof t.title === 'string' &&
-              t.title.trim() &&
-              typeof t.description === 'string' &&
-              t.description.trim();
-            if (!isValid) {
-              this.logger.debug(
-                `Translation for banner ${banner.slug} (lang=${lang}) invalid: id=${t.id}, title=${t.title}, description=${t.description}`
-              );
-            }
-            return isValid;
-          });
-
-          if (!hasValidTranslation) {
-            this.logger.debug(`Banner ${banner.slug} has no valid translation for ${lang}`);
-            return false;
-          }
-          return true;
-        })
-        .map((banner) => {
-          const url = `${process.env.DOMAIN}/${lang}/banner/${banner.slug}`;
-          this.logger.debug(`Generated URL: ${url}`);
-          return url;
-        });
-
-      if (urls.length === 0) {
-        this.logger.warn(`No valid translations found for banners in language ${lang}`);
-        throw new BadRequestException(
-          this.i18n.t('global.global.NO_VALID_TRANSLATIONS', { args: { lang } })
-        );
-      }
-
-      this.logger.log(`Generated ${urls.length} URLs for banner sitemap`);
-      return { urls };
-    } catch (error) {
-      this.logger.error(`Error generating sitemap for ${lang}: ${error.message}`, error.stack);
-      throw error instanceof BadRequestException
-        ? error
-        : new BadRequestException(this.i18n.t('global.global.INTERNAL_ERROR'));
-    }
-  }
-
-  async findOne(id: number): Promise<Banner> {
-    if (isNaN(id) || id <= 0) {
-      this.logger.warn(`Invalid id: ${id}`);
-      const message = this.i18n.t('global.global.INVALID_NUMBER_PARAM', { args: { param: 'id' } });
-      this.logger.debug(`i18n message: ${message}`);
-      throw new BadRequestException(message);
-    }
-    const banner = await this.bannerRepository.findOne({ where: { id }, relations: ['translations'] });
-    if (!banner) {
-      throw new NotFoundException(this.i18n.t('banner.BANNER_NOT_FOUND'));
-    }
-    return banner;
-  }
-
   async create(dto: CreateBannerDto): Promise<Banner> {
     this.logger.log(`Creating banner with slug: ${dto.slug}`);
     try {
@@ -187,6 +52,20 @@ export class BannerService {
     return this.bannerRepository.find({ relations: ['translations'] });
   }
 
+  async findOne(id: number): Promise<Banner> {
+    if (isNaN(id) || id <= 0) {
+      this.logger.warn(`Invalid id: ${id}`);
+      const message = this.i18n.t('global.global.INVALID_NUMBER_PARAM', { args: { param: 'id' } });
+      this.logger.debug(`i18n message: ${message}`);
+      throw new BadRequestException(message);
+    }
+    const banner = await this.bannerRepository.findOne({ where: { id }, relations: ['translations'] });
+    if (!banner) {
+      throw new NotFoundException(this.i18n.t('global.banner.BANNER_NOT_FOUND'));
+    }
+    return banner;
+  }
+
   async findBySlug(slug: string, lang?: string): Promise<Banner> {
     if (!slug) {
       this.logger.warn(`Invalid slug: ${slug}`);
@@ -194,7 +73,7 @@ export class BannerService {
     }
     const banner = await this.bannerRepository.findOne({ where: { slug }, relations: ['translations'] });
     if (!banner) {
-      throw new NotFoundException(this.i18n.t('banner.BANNER_NOT_FOUND'));
+      throw new NotFoundException(this.i18n.t('global.banner.BANNER_NOT_FOUND'));
     }
     if (lang && !banner.translations.some((t) => t.language === lang)) {
       throw new NotFoundException(this.i18n.t('global.banner.TRANSLATION_NOT_FOUND', { args: { lang } }));
@@ -249,5 +128,128 @@ export class BannerService {
       counter++;
     }
     return uniqueSlug;
+  }
+
+  async getSitemap(lang: string = 'en'): Promise<{ urls: string[] }> {
+    this.logger.log(`Generating sitemap for banners: ${lang}`);
+    if (!SUPPORTED_LANGUAGES.includes(lang as typeof SUPPORTED_LANGUAGES[number])) {
+      this.logger.warn(`Invalid language: ${lang}`);
+      throw new BadRequestException(
+        this.i18n.t('global.global.INVALID_LANGUAGE', {
+          args: { lang, supported: SUPPORTED_LANGUAGES.join(', ') },
+        })
+      );
+    }
+    try {
+      const banners = await this.bannerRepository.find({ relations: ['translations'] });
+      this.logger.debug(`Found ${banners.length} banners`);
+  
+      const urls = banners
+        .filter((banner) => {
+          // Kiểm tra id và slug
+          if (
+            !banner.id ||
+            isNaN(banner.id) ||
+            banner.id <= 0 ||
+            !banner.slug ||
+            typeof banner.slug !== 'string' ||
+            banner.slug.trim() === ''
+          ) {
+            this.logger.warn(`Invalid banner data: id=${banner.id}, slug=${banner.slug}`);
+            return false;
+          }
+  
+          // Kiểm tra translations
+          const translations = banner.translations || [];
+          if (!translations.length) {
+            this.logger.debug(`Banner ${banner.slug} has no translations`);
+            return false;
+          }
+  
+          const hasValidTranslation = translations.some((t) => {
+            const isValid =
+              t.language === lang &&
+              t.id &&
+              !isNaN(t.id) &&
+              t.id > 0 &&
+              typeof t.title === 'string' &&
+              t.title.trim() &&
+              typeof t.description === 'string' &&
+              t.description.trim();
+            if (!isValid) {
+              this.logger.debug(
+                `Translation for banner ${banner.slug} (lang=${lang}) invalid: id=${t.id}, title=${t.title}, description=${t.description}`
+              );
+            }
+            return isValid;
+          });
+  
+          if (!hasValidTranslation) {
+            this.logger.debug(`Banner ${banner.slug} has no valid translation for ${lang}`);
+            return false;
+          }
+          return true;
+        })
+        .map((banner) => {
+          const url = `${process.env.DOMAIN}/${lang}/banner/${banner.slug}`;
+          this.logger.debug(`Generated URL: ${url}`);
+          return url;
+        });
+  
+      if (urls.length === 0) {
+        this.logger.warn(`No valid translations found for banners in language ${lang}`);
+        throw new BadRequestException(
+          this.i18n.t('global.global.NO_VALID_TRANSLATIONS', { args: { lang } })
+        );
+      }
+  
+      this.logger.log(`Generated ${urls.length} URLs for banner sitemap`);
+      return { urls };
+    } catch (error) {
+      this.logger.error(`Error generating sitemap for ${lang}: ${error.message}`, error.stack);
+      throw error instanceof BadRequestException
+        ? error
+        : new BadRequestException(this.i18n.t('global.global.INTERNAL_ERROR'));
+    }
+  }
+
+  async deleteTranslation(bannerId: number, language: string): Promise<void> {
+    this.logger.debug(`Attempting to delete translation for bannerId=${bannerId}, language=${language}`);
+    if (isNaN(bannerId) || bannerId <= 0) {
+      this.logger.warn(`Invalid bannerId: ${bannerId}`);
+      throw new BadRequestException(
+        this.i18n.t('global.global.INVALID_NUMBER_PARAM', { args: { param: 'bannerId' } })
+      );
+    }
+    if (!SUPPORTED_LANGUAGES.includes(language as typeof SUPPORTED_LANGUAGES[number])) {
+      this.logger.warn(`Invalid language: ${language}`);
+      throw new BadRequestException(
+        this.i18n.t('global.global.INVALID_LANGUAGE', {
+          args: { lang: language, supported: SUPPORTED_LANGUAGES.join(', ') },
+        })
+      );
+    }
+    try {
+      const translation = await this.translationRepository.findOne({
+        where: { banner: { id: bannerId }, language },
+        relations: ['banner'],
+      });
+      if (!translation) {
+        this.logger.warn(`Translation not found: bannerId=${bannerId}, language=${language}`);
+        throw new NotFoundException(
+          this.i18n.t('global.banner.TRANSLATION_NOT_FOUND', { args: { lang: language } })
+        );
+      }
+      await this.translationRepository.remove(translation);
+      this.logger.log(`Deleted translation for bannerId=${bannerId}, language=${language}`);
+    } catch (error) {
+      this.logger.error(
+        `Error deleting translation for bannerId=${bannerId}, language=${language}: ${error.message}`,
+        error.stack
+      );
+      throw error instanceof BadRequestException || error instanceof NotFoundException
+        ? error
+        : new BadRequestException(this.i18n.t('global.global.INTERNAL_ERROR'));
+    }
   }
 }

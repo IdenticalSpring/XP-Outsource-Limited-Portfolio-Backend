@@ -9,7 +9,7 @@ import { SUPPORTED_LANGUAGES } from '../../config/languages';
 import { Logger } from '@nestjs/common';
 
 @ApiTags('contact')
-@Controller()
+@Controller('contact')
 export class ContactController {
   private readonly logger = new Logger(ContactController.name);
 
@@ -34,7 +34,7 @@ export class ContactController {
     return param;
   }
 
-  @Post("contact")
+  @Post()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create contact' })
@@ -53,7 +53,7 @@ export class ContactController {
     }
   }
 
-  @Get("contact")
+  @Get()
   @ApiOperation({ summary: 'Get all contacts' })
   @ApiResponse({ status: 200, type: [Contact] })
   async findAll(): Promise<Contact[]> {
@@ -61,8 +61,7 @@ export class ContactController {
     return this.contactService.findAll();
   }
 
-
-  @Get('contact/:id')
+  @Get(':id')
   @ApiOperation({ summary: 'Get contact by ID' })
   @ApiResponse({ status: 200, type: Contact })
   async findOne(@Param('id') id: string, @I18n() i18n: I18nContext): Promise<Contact> {
@@ -79,7 +78,7 @@ export class ContactController {
     }
   }
 
-  @Get(':lang/contact/:slug')
+  @Get(':lang/:slug')
   @ApiOperation({ summary: 'Get contact by slug and language' })
   @ApiResponse({ status: 200, type: Contact })
   async findBySlugAndLang(
@@ -102,7 +101,33 @@ export class ContactController {
     }
   }
 
-  @Put('contact/:id')
+  @Delete('translation/:id/:language')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Delete contact translation by ID and language' })
+  @ApiResponse({ status: 200 })
+  async deleteTranslation(
+    @Param('id') id: string,
+    @Param('language') language: string,
+    @I18n() i18n: I18nContext
+  ): Promise<{ message: string }> {
+    const translationId = this.validateNumberParam(id, 'translationId', i18n);
+    this.validateStringParam(language, 'language', i18n);
+    try {
+      await this.contactService.deleteTranslation(translationId, language);
+      return { message: i18n.t('global.contact.TRANSLATION_DELETED', { args: { lang: language } }) };
+    } catch (error) {
+      this.logger.error(
+        `Error deleting translation id=${translationId} for language=${language}: ${error.message}`,
+        error.stack
+      );
+      throw error instanceof BadRequestException || error instanceof NotFoundException
+        ? error
+        : new BadRequestException(i18n.t('global.global.INTERNAL_ERROR'));
+    }
+  }
+
+  @Put(':id')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update contact' })
@@ -121,7 +146,7 @@ export class ContactController {
     }
   }
 
-  @Delete('contact/:id')
+  @Delete(':id')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete contact' })

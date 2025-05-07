@@ -17,7 +17,9 @@
     "BLOG_NOT_FOUND": "Không tìm thấy blog",
     "TRANSLATION_CREATED": "Bản dịch được tạo thành công",
     "TRANSLATION_NOT_FOUND": "Không tìm thấy bản dịch cho ngôn ngữ {lang}",
-    "TRANSLATION_ALREADY_EXISTS": "Bản dịch cho ngôn ngữ {lang} đã tồn tại"
+    "TRANSLATION_ALREADY_EXISTS": "Bản dịch cho ngôn ngữ {lang} đã tồn tại",
+    "TRANSLATION_DELETED": "Bản dịch cho ngôn ngữ {lang} đã được xóa thành công",
+    "TRANSLATION_NOT_DELETED": "Không thể xóa bản dịch cho ngôn ngữ {lang}"
   },
   "banner": {
     "BANNER_CREATED": "Banner được tạo thành công",
@@ -35,6 +37,7 @@
     "CONTACT_NOT_FOUND": "Không tìm thấy liên hệ",
     "TRANSLATION_CREATED": "Bản dịch liên hệ được tạo thành công",
     "TRANSLATION_NOT_FOUND": "Không tìm thấy bản dịch liên hệ cho ngôn ngữ {lang}",
-    "TRANSLATION_ALREADY_EXISTS": "Bản dịch banner cho ngôn ngữ {lang} đã tồn tại"
+    "TRANSLATION_ALREADY_EXISTS": "Bản dịch banner cho ngôn ngữ {lang} đã tồn tại",
+    "TRANSLATION_DELETED": "Bản dịch liên hệ cho ngôn ngữ {lang} đã được xóa thành công"
   }
 }

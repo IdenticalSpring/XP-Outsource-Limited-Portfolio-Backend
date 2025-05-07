@@ -68,7 +68,7 @@ export class ContactService {
     }
     const contact = await this.contactRepository.findOne({ where: { id }, relations: ['translations'] });
     if (!contact) {
-      throw new NotFoundException(this.i18n.t('contact.CONTACT_NOT_FOUND'));
+      throw new NotFoundException(this.i18n.t('global.contact.CONTACT_NOT_FOUND'));
     }
     return contact;
   }
@@ -94,7 +94,7 @@ export class ContactService {
       })
       .getOne();
     if (!contact) {
-      throw new NotFoundException(this.i18n.t('contact.TRANSLATION_NOT_FOUND', { args: { lang: language } }));
+      throw new NotFoundException(this.i18n.t('global.contact.TRANSLATION_NOT_FOUND', { args: { lang: language } }));
     }
     return contact;
   }
@@ -205,6 +205,46 @@ export class ContactService {
     } catch (error) {
       this.logger.error(`Error generating sitemap for ${lang}: ${error.message}`, error.stack);
       throw error instanceof BadRequestException
+        ? error
+        : new BadRequestException(this.i18n.t('global.global.INTERNAL_ERROR'));
+    }
+  }
+
+  async deleteTranslation(contactId: number, language: string): Promise<void> {
+    this.logger.debug(`Attempting to delete translation for contactId=${contactId}, language=${language}`);
+    if (isNaN(contactId) || contactId <= 0) {
+      this.logger.warn(`Invalid contactId: ${contactId}`);
+      throw new BadRequestException(
+        this.i18n.t('global.global.INVALID_NUMBER_PARAM', { args: { param: 'contactId' } })
+      );
+    }
+    if (!SUPPORTED_LANGUAGES.includes(language as typeof SUPPORTED_LANGUAGES[number])) {
+      this.logger.warn(`Invalid language: ${language}`);
+      throw new BadRequestException(
+        this.i18n.t('global.global.INVALID_LANGUAGE', {
+          args: { lang: language, supported: SUPPORTED_LANGUAGES.join(', ') },
+        })
+      );
+    }
+    try {
+      const translation = await this.translationRepository.findOne({
+        where: { contact: { id: contactId }, language },
+        relations: ['contact'],
+      });
+      if (!translation) {
+        this.logger.warn(`Translation not found: contactId=${contactId}, language=${language}`);
+        throw new NotFoundException(
+          this.i18n.t('global.contact.TRANSLATION_NOT_FOUND', { args: { lang: language } })
+        );
+      }
+      await this.translationRepository.remove(translation);
+      this.logger.log(`Deleted translation for contactId=${contactId}, language=${language}`);
+    } catch (error) {
+      this.logger.error(
+        `Error deleting translation for contactId=${contactId}, language=${language}: ${error.message}`,
+        error.stack
+      );
+      throw error instanceof BadRequestException || error instanceof NotFoundException
         ? error
         : new BadRequestException(this.i18n.t('global.global.INTERNAL_ERROR'));
     }

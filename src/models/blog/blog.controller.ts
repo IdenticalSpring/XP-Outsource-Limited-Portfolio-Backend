@@ -93,45 +93,27 @@ export class BlogController {
     }
   }
 
-  @Delete('blog/:id/translations/:translationId')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Delete translation by ID' })
-  @ApiResponse({ status: 204 })
-  async removeTranslation(
-    @Param('id') id: string,
-    @Param('translationId') translationId: string,
-    @I18n() i18n: I18nContext,
-  ): Promise<void> {
-    const blogId = this.validateNumberParam(id, 'id', i18n);
-    const transId = this.validateNumberParam(translationId, 'translationId', i18n);
-    this.logger.log(`Removing translation ${transId} for blog ${blogId}`);
-    try {
-      await this.blogService.removeTranslation(blogId, transId);
-    } catch (error) {
-      this.logger.error(`Error removing translation ${transId} for blog ${blogId}: ${error.message}`, error.stack);
-      throw error instanceof BadRequestException || error instanceof NotFoundException
-        ? error
-        : new BadRequestException(i18n.t('global.global.INTERNAL_ERROR'));
-    }
-  }
+  
 
-  @Delete('blog/:id/translations/language')
+ 
+  @Delete('translations/:id/:language')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Delete translation by language' })
-  @ApiResponse({ status: 204 })
+  @ApiOperation({ summary: 'Delete blog translation by blog ID and language' })
+  @ApiResponse({ status: 200 })
   async removeTranslationByLanguage(
     @Param('id') id: string,
-    @Body() dto: DeleteTranslationDto,
+    @Param('language') language: string,
     @I18n() i18n: I18nContext,
-  ): Promise<void> {
-    const blogId = this.validateNumberParam(id, 'id', i18n);
-    this.logger.log(`Removing translation for language ${dto.language} in blog ${blogId}`);
+  ): Promise<{ message: string }> {
+    const blogId = this.validateNumberParam(id, 'blogId', i18n);
+    this.validateStringParam(language, 'language', i18n);
+    this.logger.log(`Removing translation for language ${language} in blog ${blogId}`);
     try {
-      await this.blogService.removeTranslationByLanguage(blogId, dto);
+      await this.blogService.removeTranslationByLanguage(blogId, language);
+      return { message: i18n.t('global.blog.TRANSLATION_DELETED', { args: { lang: language } }) };
     } catch (error) {
-      this.logger.error(`Error removing translation for language ${dto.language} in blog ${blogId}: ${error.message}`, error.stack);
+      this.logger.error(`Error removing translation for language ${language} in blog ${blogId}: ${error.message}`, error.stack);
       throw error instanceof BadRequestException || error instanceof NotFoundException
         ? error
         : new BadRequestException(i18n.t('global.global.INTERNAL_ERROR'));

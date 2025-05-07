@@ -113,7 +113,7 @@ export class BannerController {
         : new BadRequestException(i18n.t('global.global.INTERNAL_ERROR'));
     }
   }
-  @Delete('translation/:id/:language')
+  @Delete('banner/translation/:id/:language')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete banner translation by ID and language' })
