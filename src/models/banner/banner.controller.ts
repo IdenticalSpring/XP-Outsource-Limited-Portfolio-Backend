@@ -113,6 +113,30 @@ export class BannerController {
         : new BadRequestException(i18n.t('global.global.INTERNAL_ERROR'));
     }
   }
+  @Delete('translation/:id/:language')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Delete banner translation by ID and language' })
+  @ApiResponse({ status: 204 })
+  async deleteTranslation(
+    @Param('id') id: string,
+    @Param('language') language: string,
+    @I18n() i18n: I18nContext
+  ): Promise<void> {
+    const translationId = this.validateNumberParam(id, 'translationId', i18n);
+    this.validateStringParam(language, 'language', i18n);
+    try {
+      await this.bannerService.deleteTranslation(translationId, language);
+    } catch (error) {
+      this.logger.error(
+        `Error deleting translation id=${translationId} for language=${language}: ${error.message}`,
+        error.stack
+      );
+      throw error instanceof BadRequestException || error instanceof NotFoundException
+        ? error
+        : new BadRequestException(i18n.t('global.global.INTERNAL_ERROR'));
+    }
+  }
 
   @Delete('banner/:id')
   @UseGuards(JwtAuthGuard)

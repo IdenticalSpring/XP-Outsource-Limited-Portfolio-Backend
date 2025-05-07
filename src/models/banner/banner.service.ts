@@ -19,6 +19,44 @@ export class BannerService {
     private i18n: I18nService,
   ) {}
 
+  async deleteTranslation(translationId: number, language: string): Promise<void> {
+    if (isNaN(translationId) || translationId <= 0) {
+      this.logger.warn(`Invalid translationId: ${translationId}`);
+      throw new BadRequestException(
+        this.i18n.t('global.global.INVALID_NUMBER_PARAM', { args: { param: 'translationId' } })
+      );
+    }
+    if (!SUPPORTED_LANGUAGES.includes(language as typeof SUPPORTED_LANGUAGES[number])) {
+      this.logger.warn(`Invalid language: ${language}`);
+      throw new BadRequestException(
+        this.i18n.t('global.global.INVALID_LANGUAGE', {
+          args: { lang: language, supported: SUPPORTED_LANGUAGES.join(', ') },
+        })
+      );
+    }
+    try {
+      const translation = await this.translationRepository.findOne({
+        where: { id: translationId, language },
+        relations: ['banner'],
+      });
+      if (!translation) {
+        throw new NotFoundException(
+          this.i18n.t('global.banner.TRANSLATION_NOT_FOUND', { args: { lang: language } })
+        );
+      }
+      await this.translationRepository.remove(translation);
+      this.logger.log(`Deleted translation id=${translationId} for language=${language}`);
+    } catch (error) {
+      this.logger.error(
+        `Error deleting translation id=${translationId} for language=${language}: ${error.message}`,
+        error.stack
+      );
+      throw error instanceof BadRequestException || error instanceof NotFoundException
+        ? error
+        : new BadRequestException(this.i18n.t('global.global.INTERNAL_ERROR'));
+    }
+  }
+
   async getSitemap(lang: string = 'en'): Promise<{ urls: string[] }> {
     this.logger.log(`Generating sitemap for banners: ${lang}`);
     if (!SUPPORTED_LANGUAGES.includes(lang as typeof SUPPORTED_LANGUAGES[number])) {
@@ -159,7 +197,7 @@ export class BannerService {
       throw new NotFoundException(this.i18n.t('banner.BANNER_NOT_FOUND'));
     }
     if (lang && !banner.translations.some((t) => t.language === lang)) {
-      throw new NotFoundException(this.i18n.t('banner.TRANSLATION_NOT_FOUND', { args: { lang } }));
+      throw new NotFoundException(this.i18n.t('global.banner.TRANSLATION_NOT_FOUND', { args: { lang } }));
     }
     return banner;
   }
