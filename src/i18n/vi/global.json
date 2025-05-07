@@ -39,5 +39,13 @@
     "TRANSLATION_NOT_FOUND": "Không tìm thấy bản dịch liên hệ cho ngôn ngữ {lang}",
     "TRANSLATION_ALREADY_EXISTS": "Bản dịch banner cho ngôn ngữ {lang} đã tồn tại",
     "TRANSLATION_DELETED": "Bản dịch liên hệ cho ngôn ngữ {lang} đã được xóa thành công"
-  }
+  },
+  "member": {
+    "MEMBER_CREATED": "Thành viên được tạo thành công",
+    "MEMBER_NOT_FOUND": "Không tìm thấy thành viên",
+    "TRANSLATION_CREATED": "Bản dịch thành viên được tạo thành công",
+    "TRANSLATION_NOT_FOUND": "Không tìm thấy bản dịch thành viên cho ngôn ngữ {lang}",
+    "TRANSLATION_ALREADY_EXISTS": "Bản dịch thành viên cho ngôn ngữ {lang} đã tồn tại",
+    "TRANSLATION_DELETED": "Bản dịch thành viên cho ngôn ngữ {lang} đã được xóa thành công"
+    }
 }

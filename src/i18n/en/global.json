@@ -38,5 +38,13 @@
       "TRANSLATION_NOT_FOUND": "Contact translation for language {lang} not found",
       "TRANSLATION_ALREADY_EXISTS": "Contact translation for language {lang} already exists",
       "TRANSLATION_DELETED": "Contact translation for language {lang} deleted successfully"
+    },
+    "member": {
+    "MEMBER_CREATED": "Member created successfully",
+    "MEMBER_NOT_FOUND": "Member not found",
+    "TRANSLATION_CREATED": "Member translation created successfully",
+    "TRANSLATION_NOT_FOUND": "Member translation for language {lang} not found",
+    "TRANSLATION_ALREADY_EXISTS": "Member translation for language {lang} already exists",
+    "TRANSLATION_DELETED": "Member translation for language {lang} deleted successfully"
     }
   }

@@ -1,24 +1,26 @@
-import { IsString, MaxLength, IsNotEmpty, IsArray } from 'class-validator';
+import { IsString, MaxLength, IsNotEmpty, IsArray, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class CreateMemberDto {
+export class MemberTranslationDto {
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty()
+  language: string;
+
   @IsString()
   @IsNotEmpty()
   @ApiProperty()
   name: string;
 
   @IsString()
-  @ApiProperty()
-  description: string;
-
-  @IsString()
-  @ApiProperty()
-  image: string;
-
-  @IsString()
   @IsNotEmpty()
   @ApiProperty({ description: 'URL-friendly slug for SEO' })
   slug: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty({ description: 'Meta title for SEO' })
+  metaTitle: string;
 
   @IsString()
   @MaxLength(160)
@@ -29,32 +31,37 @@ export class CreateMemberDto {
   @IsString({ each: true })
   @ApiProperty({ description: 'Keywords for SEO' })
   keywords: string[];
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty({ description: 'Canonical URL for SEO' })
+  canonicalUrl: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty()
+  description: string;
+}
+
+export class CreateMemberDto {
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty()
+  image: string;
+
+  @IsArray()
+  @ApiProperty({ type: [MemberTranslationDto] })
+  translations: MemberTranslationDto[];
 }
 
 export class UpdateMemberDto {
   @IsString()
-  @ApiProperty({ required: false })
-  name?: string;
-
-  @IsString()
-  @ApiProperty({ required: false })
-  description?: string;
-
-  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   image?: string;
 
-  @IsString()
-  @ApiProperty({ required: false })
-  slug?: string;
-
-  @IsString()
-  @MaxLength(160)
-  @ApiProperty({ required: false })
-  metaDescription?: string;
-
   @IsArray()
-  @IsString({ each: true })
-  @ApiProperty({ required: false })
-  keywords?: string[];
+  @IsOptional()
+  @ApiProperty({ type: [MemberTranslationDto], required: false })
+  translations?: MemberTranslationDto[];
 }

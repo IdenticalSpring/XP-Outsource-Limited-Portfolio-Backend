@@ -42,7 +42,7 @@ export class BannerController {
     try {
       const banner = await this.bannerService.create(dto);
       return {
-        message: i18n.t('banner.BANNER_CREATED'),
+        message: i18n.t('global.banner.BANNER_CREATED'),
         banner,
       };
     } catch (error) {
