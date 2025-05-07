@@ -2,10 +2,10 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Query, BadRequestException, NotFoundException } from '@nestjs/common';
 import { BlogService } from './blog.service';
 import { CreateBlogDto, UpdateBlogDto, BlogTranslationDto, DeleteTranslationDto } from './blog.dto';
-import { Blog } from './entity/blog.entity'; 
+import { Blog } from './entity/blog.entity';
 import { BlogTranslation } from './entity/blog-translation.entity';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../admin/jwt-auth.guard'; 
+import { JwtAuthGuard } from '../admin/jwt-auth.guard';
 import { I18n, I18nContext } from 'nestjs-i18n';
 import { SUPPORTED_LANGUAGES } from '../../config/languages';
 import { Logger } from '@nestjs/common';
@@ -21,7 +21,7 @@ export class BlogController {
     const num = parseInt(param, 10);
     if (isNaN(num) || num <= 0) {
       this.logger.warn(`Invalid ${paramName}: ${param}`);
-      throw new BadRequestException(i18n.t('global.INVALID_NUMBER_PARAM', { args: { param: paramName } }));
+      throw new BadRequestException(i18n.t('global.global.INVALID_NUMBER_PARAM', { args: { param: paramName } }));
     }
     return num;
   }
@@ -29,7 +29,7 @@ export class BlogController {
   private validateStringParam(param: string, paramName: string, i18n: I18nContext): string {
     if (!param || typeof param !== 'string' || param.trim() === '') {
       this.logger.warn(`Invalid ${paramName}: ${param}`);
-      throw new BadRequestException(i18n.t('global.INVALID_PARAM', { args: { param: paramName } }));
+      throw new BadRequestException(i18n.t('global.global.INVALID_PARAM', { args: { param: paramName } }));
     }
     return param;
   }
@@ -39,11 +39,11 @@ export class BlogController {
     const parsedLimit = parseInt(String(limit), 10);
     if (isNaN(parsedPage) || parsedPage <= 0) {
       this.logger.warn(`Invalid page: ${page}`);
-      throw new BadRequestException(i18n.t('global.INVALID_NUMBER_PARAM', { args: { param: 'page' } }));
+      throw new BadRequestException(i18n.t('global.global.INVALID_NUMBER_PARAM', { args: { param: 'page' } }));
     }
     if (isNaN(parsedLimit) || parsedLimit <= 0 || parsedLimit > 100) {
       this.logger.warn(`Invalid limit: ${limit}`);
-      throw new BadRequestException(i18n.t('global.INVALID_NUMBER_PARAM', { args: { param: 'limit' } }));
+      throw new BadRequestException(i18n.t('global.global.INVALID_NUMBER_PARAM', { args: { param: 'limit' } }));
     }
     return { page: parsedPage, limit: parsedLimit };
   }
@@ -58,12 +58,12 @@ export class BlogController {
     try {
       const blog = await this.blogService.create(dto);
       return {
-        message: i18n.t('global.BLOG_CREATED'),
+        message: i18n.t('global.blog.BLOG_CREATED'),
         blog,
       };
     } catch (error) {
       this.logger.error(`Error creating blog: ${error.message}`, error.stack);
-      throw error instanceof BadRequestException ? error : new BadRequestException(i18n.t('global.INTERNAL_ERROR'));
+      throw error instanceof BadRequestException ? error : new BadRequestException(i18n.t('global.global.INTERNAL_ERROR'));
     }
   }
 
@@ -82,14 +82,14 @@ export class BlogController {
     try {
       const translation = await this.blogService.addTranslation(blogId, dto);
       return {
-        message: i18n.t('global.TRANSLATION_CREATED'),
+        message: i18n.t('global.blog.TRANSLATION_CREATED'),
         translation,
       };
     } catch (error) {
       this.logger.error(`Error adding translation for blog ${blogId}: ${error.message}`, error.stack);
       throw error instanceof BadRequestException || error instanceof NotFoundException
         ? error
-        : new BadRequestException(i18n.t('global.INTERNAL_ERROR'));
+        : new BadRequestException(i18n.t('global.global.INTERNAL_ERROR'));
     }
   }
 
@@ -112,7 +112,7 @@ export class BlogController {
       this.logger.error(`Error removing translation ${transId} for blog ${blogId}: ${error.message}`, error.stack);
       throw error instanceof BadRequestException || error instanceof NotFoundException
         ? error
-        : new BadRequestException(i18n.t('global.INTERNAL_ERROR'));
+        : new BadRequestException(i18n.t('global.global.INTERNAL_ERROR'));
     }
   }
 
@@ -134,20 +134,24 @@ export class BlogController {
       this.logger.error(`Error removing translation for language ${dto.language} in blog ${blogId}: ${error.message}`, error.stack);
       throw error instanceof BadRequestException || error instanceof NotFoundException
         ? error
-        : new BadRequestException(i18n.t('global.INTERNAL_ERROR'));
+        : new BadRequestException(i18n.t('global.global.INTERNAL_ERROR'));
     }
   }
 
   @Get('blog/sitemap')
   @ApiOperation({ summary: 'Get sitemap for SEO' })
   @ApiResponse({ status: 200 })
-  async getSitemap(@Query('lang') lang: string = 'en', @I18n() i18n: I18nContext): Promise<{ urls: string[] }> {
+  async getSitemap(@Query('lang') lang: string = 'en', @I18n() i18n: I18nContext): Promise<{ urls: string[]; message: string }> {
     this.logger.log(`Fetching sitemap for language ${lang}`);
     try {
-      return await this.blogService.getSitemap(lang);
+      const sitemap = await this.blogService.getSitemap(lang);
+      return {
+        urls: sitemap.urls,
+        message: i18n.t('global.global.SITEMAP_GENERATED', { args: { count: sitemap.urls.length } }),
+      };
     } catch (error) {
       this.logger.error(`Error fetching sitemap for language ${lang}: ${error.message}`, error.stack);
-      throw error instanceof BadRequestException ? error : new BadRequestException(i18n.t('global.INTERNAL_ERROR'));
+      throw error instanceof BadRequestException ? error : new BadRequestException(i18n.t('global.global.INTERNAL_ERROR'));
     }
   }
 
@@ -165,7 +169,7 @@ export class BlogController {
       return await this.blogService.findAll(validatedPage, validatedLimit);
     } catch (error) {
       this.logger.error(`Error fetching blogs: ${error.message}`, error.stack);
-      throw error instanceof BadRequestException ? error : new BadRequestException(i18n.t('global.INTERNAL_ERROR'));
+      throw error instanceof BadRequestException ? error : new BadRequestException(i18n.t('global.global.INTERNAL_ERROR'));
     }
   }
 
@@ -181,7 +185,7 @@ export class BlogController {
       this.logger.error(`Error fetching blog ${blogId}: ${error.message}`, error.stack);
       throw error instanceof BadRequestException || error instanceof NotFoundException
         ? error
-        : new BadRequestException(i18n.t('global.INTERNAL_ERROR'));
+        : new BadRequestException(i18n.t('global.global.INTERNAL_ERROR'));
     }
   }
 
@@ -197,7 +201,7 @@ export class BlogController {
     this.logger.log(`Fetching blog with slug ${slug} for language ${lang}`);
     if (!SUPPORTED_LANGUAGES.includes(lang as typeof SUPPORTED_LANGUAGES[number])) {
       throw new BadRequestException(
-        i18n.t('global.INVALID_LANGUAGE', { args: { lang, supported: SUPPORTED_LANGUAGES.join(', ') } }),
+        i18n.t('global.global.INVALID_LANGUAGE', { args: { lang, supported: SUPPORTED_LANGUAGES.join(', ') } }),
       );
     }
     try {
@@ -206,7 +210,7 @@ export class BlogController {
       this.logger.error(`Error fetching blog with slug ${slug} for language ${lang}: ${error.message}`, error.stack);
       throw error instanceof BadRequestException || error instanceof NotFoundException
         ? error
-        : new BadRequestException(i18n.t('global.INTERNAL_ERROR'));
+        : new BadRequestException(i18n.t('global.global.INTERNAL_ERROR'));
     }
   }
 
@@ -228,7 +232,7 @@ export class BlogController {
       this.logger.error(`Error updating blog ${blogId}: ${error.message}`, error.stack);
       throw error instanceof BadRequestException || error instanceof NotFoundException
         ? error
-        : new BadRequestException(i18n.t('global.INTERNAL_ERROR'));
+        : new BadRequestException(i18n.t('global.global.INTERNAL_ERROR'));
     }
   }
 
@@ -246,7 +250,7 @@ export class BlogController {
       this.logger.error(`Error deleting blog ${blogId}: ${error.message}`, error.stack);
       throw error instanceof BadRequestException || error instanceof NotFoundException
         ? error
-        : new BadRequestException(i18n.t('global.INTERNAL_ERROR'));
+        : new BadRequestException(i18n.t('global.global.INTERNAL_ERROR'));
     }
   }
 }

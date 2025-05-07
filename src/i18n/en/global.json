@@ -1,15 +1,33 @@
 {
-    "WELCOME": "Welcome to the API",
-    "NOT_FOUND": "Resource not found",
-    "WRONG_CREDENTIALS": "Wrong credentials",
-    "UNAUTHORIZED": "Unauthorized access",
-    "INVALID_INPUT": "Invalid input data",
-    "BLOG_CREATED": "Blog created successfully",
-    "BLOG_NOT_FOUND": "Blog not found",
-    "TRANSLATION_CREATED": "Translation created successfully",
-    "TRANSLATION_NOT_FOUND": "Translation for language {{lang}} not found",
-    "TRANSLATION_ALREADY_EXISTS": "Translation for language {{lang}} already exists",
-    "INVALID_LANGUAGE": "Invalid language: {{lang}}. Supported languages: {{supported}}",
-    "INVALID_NUMBER_PARAM": "Invalid {{param}}: must be a positive number",
-    "INVALID_PARAM": "Invalid {{param}}"
-}
+    "global": {
+      "WELCOME": "Welcome to the API",
+      "NOT_FOUND": "Resource not found",
+      "WRONG_CREDENTIALS": "Wrong credentials",
+      "UNAUTHORIZED": "Unauthorized access",
+      "INVALID_INPUT": "Invalid input data",
+      "INVALID_LANGUAGE": "Invalid language: {lang}. Supported languages: {supported}",
+      "INVALID_NUMBER_PARAM": "Invalid {param}: must be a positive number",
+      "INVALID_PARAM": "Invalid {param}",
+      "INTERNAL_ERROR": "An unexpected error occurred",
+      "NO_VALID_TRANSLATIONS": "No valid translations found for language {lang}",
+      "SITEMAP_GENERATED": "Sitemap generated successfully with {count} URLs"
+    },
+    "blog": {
+      "BLOG_CREATED": "Blog created successfully",
+      "BLOG_NOT_FOUND": "Blog not found",
+      "TRANSLATION_CREATED": "Translation created successfully",
+      "TRANSLATION_NOT_FOUND": "Translation for language {lang} not found",
+      "TRANSLATION_ALREADY_EXISTS": "Translation for language {lang} already exists"
+    },
+    "banner": {
+      "BANNER_CREATED": "Banner created successfully",
+      "BANNER_NOT_FOUND": "Banner not found",
+      "TRANSLATION_CREATED": "Banner translation created successfully",
+      "TRANSLATION_NOT_FOUND": "Banner translation for language {lang} not found",
+      "TRANSLATION_ALREADY_EXISTS": "Banner translation for language {lang} already exists"
+    },
+    "statistics": {
+      "ACCESS_RECORDED": "Access recorded successfully",
+      "STATS_NOT_FOUND": "Statistics not found for date {date}"
+    }
+  }

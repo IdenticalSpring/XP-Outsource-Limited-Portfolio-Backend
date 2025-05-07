@@ -6,10 +6,11 @@ import { I18nModule, QueryResolver, AcceptLanguageResolver } from 'nestjs-i18n';
 import { StatisticsModule } from './models/statistics/statistics.module';
 import { BannerModule } from './models/banner/banner.module';
 import { BlogModule } from './models/blog/blog.module';
-import { ContactModule } from './contact/contact.module';
+import { ContactModule } from './models/contact/contact.module';
 import { MemberModule } from './models/member/member.module';
 import { AdminModule } from './models/admin/admin.module';
 import * as path from 'path';
+import { SitemapModule } from './models/sitemap/sitemap.module';
 
 @Module({
   imports: [
@@ -61,6 +62,7 @@ import * as path from 'path';
     ContactModule,
     MemberModule,
     AdminModule,
+    SitemapModule,
   ],
 })
 export class AppModule {}

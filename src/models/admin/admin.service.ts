@@ -28,7 +28,7 @@ export class AdminService {
   async login(dto: LoginAdminDto): Promise<{ accessToken: string }> {
     const admin = await this.adminRepository.findOneBy({ username: dto.username });
     if (!admin || !(await bcrypt.compare(dto.password, admin.password))) {
-      throw new UnauthorizedException(this.i18n.t('global.WRONG_CREDENTIALS'));
+      throw new UnauthorizedException(this.i18n.t('global.global.WRONG_CREDENTIALS'));
     }
     const payload = { sub: admin.id, username: admin.username };
     return {

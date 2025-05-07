@@ -9,5 +9,6 @@ import { BlogTranslation } from './entity/blog-translation.entity';
   imports: [TypeOrmModule.forFeature([Blog,BlogTranslation])],
   providers: [BlogService],
   controllers: [BlogController],
+  exports: [BlogService],
 })
 export class BlogModule {}

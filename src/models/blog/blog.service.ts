@@ -58,20 +58,20 @@ export class BlogService {
       return savedBlog;
     } catch (error) {
       this.logger.error(`Error creating blog: ${error.message}`, error.stack);
-      throw new BadRequestException(this.i18n.t('global.INTERNAL_ERROR'));
+      throw new BadRequestException(this.i18n.t('global.global.INTERNAL_ERROR'));
     }
   }
 
   async addTranslation(blogId: number, dto: BlogTranslationDto): Promise<BlogTranslation> {
     if (isNaN(blogId) || blogId <= 0) {
       this.logger.warn(`Invalid blogId: ${blogId}`);
-      throw new BadRequestException(this.i18n.t('global.INVALID_NUMBER_PARAM', { args: { param: 'blogId' } }));
+      throw new BadRequestException(this.i18n.t('global.global.INVALID_NUMBER_PARAM', { args: { param: 'blogId' } }));
     }
     try {
       const blog = await this.findOne(blogId);
       const existingTranslation = blog.translations.find((t) => t.language === dto.language);
       if (existingTranslation) {
-        throw new BadRequestException(this.i18n.t('global.TRANSLATION_ALREADY_EXISTS', { args: { lang: dto.language } }));
+        throw new BadRequestException(this.i18n.t('global.blog.TRANSLATION_ALREADY_EXISTS', { args: { lang: dto.language } }));
       }
 
       const translation = this.translationRepository.create({
@@ -85,47 +85,47 @@ export class BlogService {
       this.logger.error(`Error adding translation for blog ${blogId}: ${error.message}`, error.stack);
       throw error instanceof BadRequestException || error instanceof NotFoundException
         ? error
-        : new BadRequestException(this.i18n.t('global.INTERNAL_ERROR'));
+        : new BadRequestException(this.i18n.t('global.global.INTERNAL_ERROR'));
     }
   }
 
   async removeTranslation(blogId: number, translationId: number): Promise<void> {
     if (isNaN(blogId) || blogId <= 0 || isNaN(translationId) || translationId <= 0) {
       this.logger.warn(`Invalid params: blogId=${blogId}, translationId=${translationId}`);
-      throw new BadRequestException(this.i18n.t('global.INVALID_NUMBER_PARAM', { args: { param: 'blogId or translationId' } }));
+      throw new BadRequestException(this.i18n.t('global.global.INVALID_NUMBER_PARAM', { args: { param: 'blogId or translationId' } }));
     }
     try {
       const blog = await this.findOne(blogId);
       const translation = blog.translations.find((t) => t.id === translationId);
       if (!translation) {
-        throw new NotFoundException(this.i18n.t('global.TRANSLATION_NOT_FOUND'));
+        throw new NotFoundException(this.i18n.t('global.blog.TRANSLATION_NOT_FOUND'));
       }
       await this.translationRepository.remove(translation);
     } catch (error) {
       this.logger.error(`Error removing translation ${translationId} for blog ${blogId}: ${error.message}`, error.stack);
       throw error instanceof BadRequestException || error instanceof NotFoundException
         ? error
-        : new BadRequestException(this.i18n.t('global.INTERNAL_ERROR'));
+        : new BadRequestException(this.i18n.t('global.global.INTERNAL_ERROR'));
     }
   }
 
   async removeTranslationByLanguage(blogId: number, dto: DeleteTranslationDto): Promise<void> {
     if (isNaN(blogId) || blogId <= 0) {
       this.logger.warn(`Invalid blogId: ${blogId}`);
-      throw new BadRequestException(this.i18n.t('global.INVALID_NUMBER_PARAM', { args: { param: 'blogId' } }));
+      throw new BadRequestException(this.i18n.t('global.global.INVALID_NUMBER_PARAM', { args: { param: 'blogId' } }));
     }
     try {
       const blog = await this.findOne(blogId);
       const translation = blog.translations.find((t) => t.language === dto.language);
       if (!translation) {
-        throw new NotFoundException(this.i18n.t('global.TRANSLATION_NOT_FOUND'));
+        throw new NotFoundException(this.i18n.t('global.blog.TRANSLATION_NOT_FOUND'));
       }
       await this.translationRepository.remove(translation);
     } catch (error) {
       this.logger.error(`Error removing translation for language ${dto.language} in blog ${blogId}: ${error.message}`, error.stack);
       throw error instanceof BadRequestException || error instanceof NotFoundException
         ? error
-        : new BadRequestException(this.i18n.t('global.INTERNAL_ERROR'));
+        : new BadRequestException(this.i18n.t('global.global.INTERNAL_ERROR'));
     }
   }
 
@@ -140,14 +140,14 @@ export class BlogService {
       return { blogs: blogs.filter((blog) => blog.id && blog.slug), total };
     } catch (error) {
       this.logger.error(`Error fetching blogs: ${error.message}`, error.stack);
-      throw new BadRequestException(this.i18n.t('global.INTERNAL_ERROR'));
+      throw new BadRequestException(this.i18n.t('global.global.INTERNAL_ERROR'));
     }
   }
 
   async findOne(id: number): Promise<Blog> {
     if (isNaN(id) || id <= 0) {
       this.logger.warn(`Invalid id: ${id}`);
-      throw new BadRequestException(this.i18n.t('global.INVALID_NUMBER_PARAM', { args: { param: 'id' } }));
+      throw new BadRequestException(this.i18n.t('global.global.INVALID_NUMBER_PARAM', { args: { param: 'id' } }));
     }
     try {
       const blog = await this.blogRepository.findOne({
@@ -155,19 +155,19 @@ export class BlogService {
         relations: ['translations'],
       });
       if (!blog || !blog.id || !blog.slug) {
-        throw new NotFoundException(this.i18n.t('global.BLOG_NOT_FOUND'));
+        throw new NotFoundException(this.i18n.t('global.blog.BLOG_NOT_FOUND'));
       }
       return blog;
     } catch (error) {
       this.logger.error(`Error fetching blog ${id}: ${error.message}`, error.stack);
-      throw error instanceof NotFoundException ? error : new BadRequestException(this.i18n.t('global.INTERNAL_ERROR'));
+      throw error instanceof NotFoundException ? error : new BadRequestException(this.i18n.t('global.global.INTERNAL_ERROR'));
     }
   }
 
   async findBySlug(slug: string, lang?: string): Promise<Blog> {
     if (!slug) {
       this.logger.warn(`Invalid slug: ${slug}`);
-      throw new BadRequestException(this.i18n.t('global.INVALID_PARAM', { args: { param: 'slug' } }));
+      throw new BadRequestException(this.i18n.t('global.global.INVALID_PARAM', { args: { param: 'slug' } }));
     }
     try {
       const blog = await this.blogRepository.findOne({
@@ -175,24 +175,24 @@ export class BlogService {
         relations: ['translations'],
       });
       if (!blog || !blog.id || !blog.slug) {
-        throw new NotFoundException(this.i18n.t('global.BLOG_NOT_FOUND'));
+        throw new NotFoundException(this.i18n.t('global.blog.BLOG_NOT_FOUND'));
       }
       if (lang && !blog.translations.some((t) => t.language === lang)) {
-        throw new NotFoundException(this.i18n.t('global.TRANSLATION_NOT_FOUND', { args: { lang } }));
+        throw new NotFoundException(this.i18n.t('global.blog.TRANSLATION_NOT_FOUND', { args: { lang } }));
       }
       return blog;
     } catch (error) {
       this.logger.error(`Error fetching blog with slug ${slug}: ${error.message}`, error.stack);
       throw error instanceof BadRequestException || error instanceof NotFoundException
         ? error
-        : new BadRequestException(this.i18n.t('global.INTERNAL_ERROR'));
+        : new BadRequestException(this.i18n.t('global.global.INTERNAL_ERROR'));
     }
   }
 
   async update(id: number, dto: UpdateBlogDto): Promise<Blog> {
     if (isNaN(id) || id <= 0) {
       this.logger.warn(`Invalid id: ${id}`);
-      throw new BadRequestException(this.i18n.t('global.INVALID_NUMBER_PARAM', { args: { param: 'id' } }));
+      throw new BadRequestException(this.i18n.t('global.global.INVALID_NUMBER_PARAM', { args: { param: 'id' } }));
     }
     try {
       const blog = await this.findOne(id);
@@ -226,14 +226,14 @@ export class BlogService {
       this.logger.error(`Error updating blog ${id}: ${error.message}`, error.stack);
       throw error instanceof BadRequestException || error instanceof NotFoundException
         ? error
-        : new BadRequestException(this.i18n.t('global.INTERNAL_ERROR'));
+        : new BadRequestException(this.i18n.t('global.global.INTERNAL_ERROR'));
     }
   }
 
   async remove(id: number): Promise<void> {
     if (isNaN(id) || id <= 0) {
       this.logger.warn(`Invalid id: ${id}`);
-      throw new BadRequestException(this.i18n.t('global.INVALID_NUMBER_PARAM', { args: { param: 'id' } }));
+      throw new BadRequestException(this.i18n.t('global.global.INVALID_NUMBER_PARAM', { args: { param: 'id' } }));
     }
     try {
       const blog = await this.findOne(id);
@@ -242,14 +242,14 @@ export class BlogService {
       this.logger.error(`Error deleting blog ${id}: ${error.message}`, error.stack);
       throw error instanceof BadRequestException || error instanceof NotFoundException
         ? error
-        : new BadRequestException(this.i18n.t('global.INTERNAL_ERROR'));
+        : new BadRequestException(this.i18n.t('global.global.INTERNAL_ERROR'));
     }
   }
 
   async generateUniqueSlug(slug: string): Promise<string> {
     if (!slug) {
       this.logger.warn(`Invalid slug: ${slug}`);
-      throw new BadRequestException(this.i18n.t('global.INVALID_PARAM', { args: { param: 'slug' } }));
+      throw new BadRequestException(this.i18n.t('global.global.INVALID_PARAM', { args: { param: 'slug' } }));
     }
     try {
       let uniqueSlug = slug.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -261,16 +261,16 @@ export class BlogService {
       return uniqueSlug;
     } catch (error) {
       this.logger.error(`Error generating slug ${slug}: ${error.message}`, error.stack);
-      throw new BadRequestException(this.i18n.t('global.INTERNAL_ERROR'));
+      throw new BadRequestException(this.i18n.t('global.global.INTERNAL_ERROR'));
     }
   }
 
   async getSitemap(lang: string = 'en'): Promise<{ urls: string[] }> {
-    this.logger.log(`Generating sitemap for language: ${lang}`);
+    this.logger.log(`Generating sitemap for blogs: ${lang}`);
     if (!SUPPORTED_LANGUAGES.includes(lang as typeof SUPPORTED_LANGUAGES[number])) {
       this.logger.warn(`Invalid language: ${lang}`);
       throw new BadRequestException(
-        this.i18n.t('global.INVALID_LANGUAGE', { args: { lang, supported: SUPPORTED_LANGUAGES.join(', ') } }),
+        this.i18n.t('global.global.INVALID_LANGUAGE', { args: { lang, supported: SUPPORTED_LANGUAGES.join(', ') } }),
       );
     }
     try {
@@ -284,10 +284,10 @@ export class BlogService {
           }
           const translations = blog.translations || [];
           const hasValidTranslation = translations.some((t) => {
-            const isValid = t.language === lang && t.id && t.title && t.content;
+            const isValid = t.language === lang && t.id && t.title?.trim() && t.content?.trim();
             if (!isValid) {
               this.logger.debug(
-                `Translation for blog ${blog.slug} (lang=${lang}) invalid: id=${t.id}, title=${t.title}, content=${t.content}, blogId=${t.blog?.id}`,
+                `Translation for blog ${blog.slug} (lang=${lang}) invalid: id=${t.id}, title=${t.title}, content=${t.content}`,
               );
             }
             return isValid;
@@ -302,11 +302,15 @@ export class BlogService {
           this.logger.debug(`Generated URL: ${url}`);
           return url;
         });
-      this.logger.log(`Generated ${urls.length} URLs for sitemap`);
+      if (urls.length === 0) {
+        this.logger.warn(`No valid translations found for blogs in language ${lang}`);
+        throw new BadRequestException(this.i18n.t('global.global.NO_VALID_TRANSLATIONS', { args: { lang } }));
+      }
+      this.logger.log(`Generated ${urls.length} URLs for blog sitemap`);
       return { urls };
     } catch (error) {
       this.logger.error(`Error generating sitemap for ${lang}: ${error.message}`, error.stack);
-      throw new BadRequestException(this.i18n.t('global.INTERNAL_ERROR'));
+      throw error instanceof BadRequestException ? error : new BadRequestException(this.i18n.t('global.global.INTERNAL_ERROR'));
     }
   }
 }

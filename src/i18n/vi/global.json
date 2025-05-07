@@ -1,15 +1,33 @@
 {
+  "global": {
     "WELCOME": "Chào mừng đến với API",
     "NOT_FOUND": "Tài nguyên không tìm thấy",
     "WRONG_CREDENTIALS": "Thông tin xác thực không đúng",
     "UNAUTHORIZED": "Truy cập không được phép",
     "INVALID_INPUT": "Dữ liệu đầu vào không hợp lệ",
+    "INVALID_LANGUAGE": "Ngôn ngữ không hợp lệ: {lang}. Ngôn ngữ hỗ trợ: {supported}",
+    "INVALID_NUMBER_PARAM": "{param} không hợp lệ: phải là số dương",
+    "INVALID_PARAM": "{param} không hợp lệ",
+    "INTERNAL_ERROR": "Đã xảy ra lỗi không mong muốn",
+    "NO_VALID_TRANSLATIONS": "Không tìm thấy bản dịch hợp lệ cho ngôn ngữ {lang}",
+    "SITEMAP_GENERATED": "Sitemap được tạo thành công với {count} URL"
+  },
+  "blog": {
     "BLOG_CREATED": "Blog được tạo thành công",
     "BLOG_NOT_FOUND": "Không tìm thấy blog",
     "TRANSLATION_CREATED": "Bản dịch được tạo thành công",
-    "TRANSLATION_NOT_FOUND": "Không tìm thấy bản dịch cho ngôn ngữ {{lang}}",
-    "TRANSLATION_ALREADY_EXISTS": "Bản dịch cho ngôn ngữ {{lang}} đã tồn tại",
-    "INVALID_LANGUAGE": "Ngôn ngữ không hợp lệ: {{lang}}. Ngôn ngữ hỗ trợ: {{supported}}",
-    "INVALID_NUMBER_PARAM": "{{param}} không hợp lệ: phải là số dương",
-    "INVALID_PARAM": "{{param}} không hợp lệ"
+    "TRANSLATION_NOT_FOUND": "Không tìm thấy bản dịch cho ngôn ngữ {lang}",
+    "TRANSLATION_ALREADY_EXISTS": "Bản dịch cho ngôn ngữ {lang} đã tồn tại"
+  },
+  "banner": {
+    "BANNER_CREATED": "Banner được tạo thành công",
+    "BANNER_NOT_FOUND": "Không tìm thấy banner",
+    "TRANSLATION_CREATED": "Bản dịch banner được tạo thành công",
+    "TRANSLATION_NOT_FOUND": "Không tìm thấy bản dịch banner cho ngôn ngữ {lang}",
+    "TRANSLATION_ALREADY_EXISTS": "Bản dịch banner cho ngôn ngữ {lang} đã tồn tại"
+  },
+  "statistics": {
+    "ACCESS_RECORDED": "Lượt truy cập được ghi lại thành công",
+    "STATS_NOT_FOUND": "Không tìm thấy thống kê cho ngày {date}"
   }
+}
