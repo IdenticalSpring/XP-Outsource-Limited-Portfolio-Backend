@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
-import { I18nModule, QueryResolver, AcceptLanguageResolver } from 'nestjs-i18n';
+import { I18nModule, QueryResolver, HeaderResolver } from 'nestjs-i18n';
 import { StatisticsModule } from './models/statistics/statistics.module';
 import { BannerModule } from './models/banner/banner.module';
 import { BlogModule } from './models/blog/blog.module';
@@ -23,8 +23,12 @@ import { SitemapModule } from './models/sitemap/sitemap.module';
       },
       resolvers: [
         new QueryResolver(['lang']),
-        new AcceptLanguageResolver(),
+        new HeaderResolver(['content-language']),
       ],
+      fallbacks: {
+        vi: 'vi/global.json', // Chỉ định rõ file global.json cho ngôn ngữ 'vi'
+        en: 'en/global.json', // Tương tự cho tiếng Anh
+      },
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
