@@ -1,23 +1,25 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, Index } from 'typeorm';
 import { Member } from './member.entity';
 import { ApiProperty } from '@nestjs/swagger';
 
 @Entity()
+@Index(['language', 'member'], { unique: true }) 
 export class MemberTranslation {
   @PrimaryGeneratedColumn()
-  @ApiProperty()
+  @ApiProperty({ description: 'Unique identifier for the translation' })
   id: number;
 
   @Column()
-  @ApiProperty()
+  @ApiProperty({ description: 'Language code (e.g., en, vi)' })
   language: string;
 
   @Column()
-  @ApiProperty()
+  @ApiProperty({ description: 'Translated name of the member' })
   name: string;
 
   @Column()
   @ApiProperty({ description: 'URL-friendly slug for SEO' })
+  @Index({ unique: true })
   slug: string;
 
   @Column()
@@ -33,14 +35,10 @@ export class MemberTranslation {
   keywords: string[];
 
   @Column()
-  @ApiProperty({ description: 'Canonical URL for SEO' })
-  canonicalUrl: string;
-
-  @Column()
-  @ApiProperty()
+  @ApiProperty({ description: 'Translated description of the member' })
   description: string;
 
-  @ManyToOne(() => Member, (member) => member.translations)
-  @ApiProperty()
+  @ManyToOne(() => Member, (member) => member.translations, { onDelete: 'CASCADE' })
+  @ApiProperty({ type: () => Member, description: 'Associated member' })
   member: Member;
 }

@@ -1,15 +1,15 @@
-import { IsString, MaxLength, IsNotEmpty, IsArray, IsOptional } from 'class-validator';
+import { IsString, MaxLength, IsNotEmpty, IsArray, IsOptional, IsBoolean, IsUrl } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class MemberTranslationDto {
   @IsString()
   @IsNotEmpty()
-  @ApiProperty()
+  @ApiProperty({ description: 'Language code (e.g., en, vi)' })
   language: string;
 
   @IsString()
   @IsNotEmpty()
-  @ApiProperty()
+  @ApiProperty({ description: 'Translated name of the member' })
   name: string;
 
   @IsString()
@@ -34,34 +34,49 @@ export class MemberTranslationDto {
 
   @IsString()
   @IsNotEmpty()
-  @ApiProperty({ description: 'Canonical URL for SEO' })
-  canonicalUrl: string;
-
-  @IsString()
-  @IsNotEmpty()
-  @ApiProperty()
+  @ApiProperty({ description: 'Translated description of the member' })
   description: string;
 }
 
 export class CreateMemberDto {
   @IsString()
   @IsNotEmpty()
-  @ApiProperty()
+  @ApiProperty({ description: 'URL or path to member image' })
   image: string;
 
+  @IsBoolean()
+  @IsOptional()
+  @ApiProperty({ description: 'Indicates if the member is active', default: true })
+  isActive?: boolean;
+
+  @IsUrl()
+  @IsOptional()
+  @ApiProperty({ description: 'Canonical URL for SEO', required: false })
+  canonicalUrl?: string;
+
   @IsArray()
-  @ApiProperty({ type: [MemberTranslationDto] })
+  @ApiProperty({ type: [MemberTranslationDto], description: 'List of translations' })
   translations: MemberTranslationDto[];
 }
 
 export class UpdateMemberDto {
   @IsString()
   @IsOptional()
-  @ApiProperty({ required: false })
+  @ApiProperty({ description: 'URL or path to member image', required: false })
   image?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  @ApiProperty({ description: 'Indicates if the member is active', required: false })
+  isActive?: boolean;
+
+  @IsUrl()
+  @IsOptional()
+  @ApiProperty({ description: 'Canonical URL for SEO', required: false })
+  canonicalUrl?: string;
 
   @IsArray()
   @IsOptional()
-  @ApiProperty({ type: [MemberTranslationDto], required: false })
+  @ApiProperty({ type: [MemberTranslationDto], required: false, description: 'List of translations' })
   translations?: MemberTranslationDto[];
 }

@@ -1,11 +1,12 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
-import { ApiProperty } from '@nestjs/swagger';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, Index } from 'typeorm';
 import { Banner } from './banner.entity';
+import { ApiProperty } from '@nestjs/swagger';
 
 @Entity()
+@Index(['language', 'banner'], { unique: true })
 export class BannerTranslation {
   @PrimaryGeneratedColumn()
-  @ApiProperty()
+  @ApiProperty({ description: 'Unique identifier for the translation' })
   id: number;
 
   @Column()
@@ -13,7 +14,7 @@ export class BannerTranslation {
   language: string;
 
   @Column()
-  @ApiProperty()
+  @ApiProperty({ description: 'Banner title' })
   title: string;
 
   @Column()
@@ -25,10 +26,18 @@ export class BannerTranslation {
   metaDescription: string;
 
   @Column('simple-array')
-  @ApiProperty({ description: 'SEO keywords' })
+  @ApiProperty({ description: 'Keywords for SEO' })
   keywords: string[];
 
+  @Column()
+  @ApiProperty({ description: 'Text for the call-to-action button' })
+  buttonText: string;
+
+  @Column()
+  @ApiProperty({ description: 'Link for the call-to-action button' })
+  buttonLink: string;
+
   @ManyToOne(() => Banner, (banner) => banner.translations, { onDelete: 'CASCADE' })
-  @ApiProperty({ type: () => Banner })
+  @ApiProperty({ type: () => Banner, description: 'Associated banner' })
   banner: Banner;
 }

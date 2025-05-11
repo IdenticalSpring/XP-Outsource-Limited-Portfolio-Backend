@@ -20,10 +20,12 @@ export class MemberService {
   ) {}
 
   async create(dto: CreateMemberDto): Promise<Member> {
-    this.logger.log(`Creating member with image: ${dto.image}`);
+    this.logger.log(`Creating member with image: ${dto.image}, canonicalUrl: ${dto.canonicalUrl || 'none'}`);
     try {
       const member = this.memberRepository.create({
         image: dto.image,
+        isActive: dto.isActive ?? true,
+        canonicalUrl: dto.canonicalUrl,
         translations: [],
       });
       const savedMember = await this.memberRepository.save(member);
@@ -104,11 +106,16 @@ export class MemberService {
       throw new BadRequestException(this.i18n.t('global.global.INVALID_NUMBER_PARAM', { args: { param: 'id' } }));
     }
     const member = await this.findOne(id);
-    if (dto.image) member.image = dto.image;
 
+    // Cập nhật các trường của Member
+    if (dto.image) member.image = dto.image;
+    if (dto.isActive !== undefined) member.isActive = dto.isActive;
+    if (dto.canonicalUrl !== undefined) member.canonicalUrl = dto.canonicalUrl;
+
+    // Cập nhật translations (chỉ thêm hoặc cập nhật, không xóa toàn bộ)
     if (dto.translations) {
-      await this.translationRepository.delete({ member: { id } });
-      member.translations = await Promise.all(
+      const existingTranslations = await this.translationRepository.find({ where: { member: { id } } });
+      const updatedTranslations = await Promise.all(
         dto.translations.map(async (t) => {
           if (!SUPPORTED_LANGUAGES.includes(t.language as typeof SUPPORTED_LANGUAGES[number])) {
             throw new BadRequestException(
@@ -117,13 +124,17 @@ export class MemberService {
               })
             );
           }
-          const translation = this.translationRepository.create({
-            ...t,
-            member,
-          });
-          return this.translationRepository.save(translation);
+          const existing = existingTranslations.find((et) => et.language === t.language);
+          if (existing) {
+            Object.assign(existing, t);
+            return this.translationRepository.save(existing);
+          } else {
+            const newTranslation = this.translationRepository.create({ ...t, member });
+            return this.translationRepository.save(newTranslation);
+          }
         }),
       );
+      member.translations = updatedTranslations;
     }
 
     try {
@@ -170,29 +181,19 @@ export class MemberService {
               typeof t.slug === 'string' &&
               t.slug.trim() &&
               typeof t.name === 'string' &&
-              t.name.trim() &&
-              typeof t.metaTitle === 'string' &&
-              t.metaTitle.trim() &&
-              typeof t.metaDescription === 'string' &&
-              t.metaDescription.trim() &&
-              Array.isArray(t.keywords) &&
-              t.keywords.length > 0 &&
-              typeof t.canonicalUrl === 'string' &&
-              t.canonicalUrl.trim() &&
-              typeof t.description === 'string' &&
-              t.description.trim();
+              t.name.trim();
             if (!isValid) {
               this.logger.debug(
-                `Translation for member id=${member.id} (lang=${lang}) invalid: slug=${t.slug}, name=${t.name}, metaTitle=${t.metaTitle}, metaDescription=${t.metaDescription}, keywords=${t.keywords}, canonicalUrl=${t.canonicalUrl}, description=${t.description}`
+                `Translation for member id=${member.id} (lang=${lang}) invalid: slug=${t.slug}, name=${t.name}`
               );
             }
             return isValid;
           });
-          return hasValidTranslation;
+          return member.isActive && hasValidTranslation;
         })
         .map((member) => {
           const translation = member.translations.find((t) => t.language === lang);
-          const url = `${process.env.DOMAIN}/${lang}/member/${translation.slug}`;
+          const url = member.canonicalUrl || `${process.env.DOMAIN}/${lang}/member/${translation.slug}`;
           this.logger.debug(`Generated URL: ${url}`);
           return url;
         });

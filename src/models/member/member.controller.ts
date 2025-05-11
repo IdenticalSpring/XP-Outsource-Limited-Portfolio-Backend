@@ -33,26 +33,6 @@ export class MemberController {
     }
     return param;
   }
-
-  @Post()
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Create member' })
-  @ApiResponse({ status: 201, type: Member })
-  async create(@Body() dto: CreateMemberDto, @I18n() i18n: I18nContext): Promise<{ message: string; member: Member }> {
-    this.logger.log('Creating new member');
-    try {
-      const member = await this.memberService.create(dto);
-      return {
-        message: i18n.t('global.member.MEMBER_CREATED'),
-        member,
-      };
-    } catch (error) {
-      this.logger.error(`Error creating member: ${error.message}`, error.stack);
-      throw error instanceof BadRequestException ? error : new BadRequestException(i18n.t('global.global.INTERNAL_ERROR'));
-    }
-  }
-
   @Get()
   @ApiOperation({ summary: 'Get all members' })
   @ApiResponse({ status: 200, type: [Member] })
@@ -153,6 +133,25 @@ export class MemberController {
     }
   }
 
+ @Post()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Create member' })
+  @ApiResponse({ status: 201, type: Member })
+  async create(@Body() dto: CreateMemberDto, @I18n() i18n: I18nContext): Promise<{ message: string; member: Member }> {
+    this.logger.log(`Creating new member with image: ${dto.image}, canonicalUrl: ${dto.canonicalUrl || 'none'}`);
+    try {
+      const member = await this.memberService.create(dto);
+      return {
+        message: i18n.t('global.member.MEMBER_CREATED'),
+        member,
+      };
+    } catch (error) {
+      this.logger.error(`Error creating member: ${error.message}`, error.stack);
+      throw error instanceof BadRequestException ? error : new BadRequestException(i18n.t('global.global.INTERNAL_ERROR'));
+    }
+  }
+
   @Put(':id')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
@@ -164,6 +163,7 @@ export class MemberController {
       throw new BadRequestException(i18n.t('global.global.INVALID_NUMBER_PARAM', { args: { param: 'id' } }));
     }
     const memberId = this.validateNumberParam(id, 'id', i18n);
+    this.logger.log(`Updating member id=${memberId}, canonicalUrl: ${dto.canonicalUrl || 'none'}`);
     try {
       return await this.memberService.update(memberId, dto);
     } catch (error) {
@@ -171,7 +171,6 @@ export class MemberController {
       throw error instanceof NotFoundException ? error : new BadRequestException(i18n.t('global.global.INTERNAL_ERROR'));
     }
   }
-
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()

@@ -1,14 +1,29 @@
+// src/main.ts
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SeoMiddleware } from './middleware/seo.middleware';
+import { join } from 'path';
+import { NestExpressApplication } from '@nestjs/platform-express';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const configService = app.get(ConfigService);
   console.log('JWT_SECRET:', configService.get('JWT_SECRET')); // Debug
+
+  // Cấu hình CORS
+  app.enableCors({
+    origin: configService.get('FRONTEND_URL') || 'http://localhost:3000',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept-Language'],
+    credentials: true,
+  });
+
+  app.useStaticAssets(join(__dirname, '..', 'public', 'images'), {
+    prefix: '/images/',
+  });
 
   // Áp dụng SEO middleware cho các route công khai
   app.use('/blog', new SeoMiddleware().use);
@@ -32,6 +47,8 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  await app.listen(3000);
+  const port = configService.get('PORT') || 8000;
+  await app.listen(port);
+  console.log(`Application is running on: http://localhost:${port}`);
 }
 bootstrap();

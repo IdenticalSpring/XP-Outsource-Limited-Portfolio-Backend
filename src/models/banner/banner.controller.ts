@@ -72,7 +72,7 @@ export class BannerController {
     }
   }
 
-  @Get(':lang/benner:slug')
+  @Get(':lang/banner:slug')
   @ApiOperation({ summary: 'Get banner by slug and language' })
   @ApiResponse({ status: 200, type: Banner })
   async findBySlugAndLang(
