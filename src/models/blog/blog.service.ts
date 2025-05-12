@@ -109,20 +109,30 @@ export class BlogService {
     }
   }
 
-  async findAll(page: number = 1, limit: number = 10): Promise<{ blogs: Blog[]; total: number }> {
-    this.logger.log(`Fetching blogs: page=${page}, limit=${limit}`);
-    try {
-      const [blogs, total] = await this.blogRepository.findAndCount({
-        relations: ['translations'],
-        skip: (page - 1) * limit,
-        take: limit,
-      });
-      return { blogs: blogs.filter((blog) => blog.id && blog.slug), total };
-    } catch (error) {
-      this.logger.error(`Error fetching blogs: ${error.message}`, error.stack);
-      throw new BadRequestException(this.i18n.t('global.global.INTERNAL_ERROR'));
-    }
+
+async findAll(page: number = 1, limit: number = 10): Promise<{ blogs: Blog[]; total: number }> {
+  this.logger.log(`Fetching blogs: page=${page}, limit=${limit}`);
+  try {
+    const [blogs, total] = await this.blogRepository.findAndCount({
+      relations: ['translations'],
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+    const validBlogs = blogs.filter(
+      (blog) =>
+        blog.id &&
+        blog.slug &&
+        blog.translations &&
+        blog.translations.length > 0 &&
+        blog.translations.some((t) => t.title && t.language)
+    );
+    this.logger.debug(`Filtered ${validBlogs.length} valid blogs out of ${blogs.length}`);
+    return { blogs: validBlogs, total };
+  } catch (error) {
+    this.logger.error(`Error fetching blogs: ${error.message}`, error.stack);
+    throw new BadRequestException(this.i18n.t('global.global.INTERNAL_ERROR'));
   }
+}
 
   async findOne(id: number): Promise<Blog> {
     if (isNaN(id) || id <= 0) {
