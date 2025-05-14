@@ -1,3 +1,4 @@
+// src/member/member.dto.ts
 import { IsString, MaxLength, IsNotEmpty, IsArray, IsOptional, IsBoolean, IsUrl } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -11,11 +12,6 @@ export class MemberTranslationDto {
   @IsNotEmpty()
   @ApiProperty({ description: 'Translated name of the member' })
   name: string;
-
-  @IsString()
-  @IsNotEmpty()
-  @ApiProperty({ description: 'URL-friendly slug for SEO' })
-  slug: string;
 
   @IsString()
   @IsNotEmpty()
@@ -44,6 +40,11 @@ export class CreateMemberDto {
   @ApiProperty({ description: 'URL or path to member image' })
   image: string;
 
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty({ description: 'URL-friendly slug for SEO' })
+  slug: string; // Thêm slug
+
   @IsBoolean()
   @IsOptional()
   @ApiProperty({ description: 'Indicates if the member is active', default: true })
@@ -64,6 +65,11 @@ export class UpdateMemberDto {
   @IsOptional()
   @ApiProperty({ description: 'URL or path to member image', required: false })
   image?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ description: 'URL-friendly slug for SEO', required: false })
+  slug?: string; // Thêm slug
 
   @IsBoolean()
   @IsOptional()

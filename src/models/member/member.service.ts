@@ -1,3 +1,4 @@
+// src/member/member.service.ts
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -20,9 +21,30 @@ export class MemberService {
   ) {}
 
   async create(dto: CreateMemberDto): Promise<Member> {
-    this.logger.log(`Creating member with image: ${dto.image}, canonicalUrl: ${dto.canonicalUrl || 'none'}`);
+    this.logger.log(`Creating member with slug: ${dto.slug}, image: ${dto.image}, canonicalUrl: ${dto.canonicalUrl || 'none'}`);
     try {
+      // Kiểm tra trùng lặp slug
+      const existingMember = await this.memberRepository.findOne({ where: { slug: dto.slug } });
+      if (existingMember) {
+        this.logger.warn(`Duplicate slug '${dto.slug}'`);
+        throw new BadRequestException(
+          this.i18n.t('global.member.DUPLICATE_SLUG', { args: { slug: dto.slug } })
+        );
+      }
+
+      // Kiểm tra ngôn ngữ hợp lệ
+      for (const t of dto.translations) {
+        if (!SUPPORTED_LANGUAGES.includes(t.language as typeof SUPPORTED_LANGUAGES[number])) {
+          throw new BadRequestException(
+            this.i18n.t('global.global.INVALID_LANGUAGE', {
+              args: { lang: t.language, supported: SUPPORTED_LANGUAGES.join(', ') },
+            })
+          );
+        }
+      }
+
       const member = this.memberRepository.create({
+        slug: dto.slug,
         image: dto.image,
         isActive: dto.isActive ?? true,
         canonicalUrl: dto.canonicalUrl,
@@ -32,13 +54,6 @@ export class MemberService {
 
       const translations = await Promise.all(
         dto.translations.map(async (t) => {
-          if (!SUPPORTED_LANGUAGES.includes(t.language as typeof SUPPORTED_LANGUAGES[number])) {
-            throw new BadRequestException(
-              this.i18n.t('global.global.INVALID_LANGUAGE', {
-                args: { lang: t.language, supported: SUPPORTED_LANGUAGES.join(', ') },
-              })
-            );
-          }
           const translation = this.translationRepository.create({
             ...t,
             member: savedMember,
@@ -51,9 +66,15 @@ export class MemberService {
       return savedMember;
     } catch (error) {
       this.logger.error(`Error creating member: ${error.message}`, error.stack);
-      throw error instanceof BadRequestException
-        ? error
-        : new BadRequestException(this.i18n.t('global.global.INTERNAL_ERROR'));
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      if (error.code === 'ER_DUP_ENTRY') {
+        throw new BadRequestException(
+          this.i18n.t('global.member.DUPLICATE_SLUG', { args: { slug: dto.slug } })
+        );
+      }
+      throw new BadRequestException(this.i18n.t('global.global.INTERNAL_ERROR'));
     }
   }
 
@@ -87,14 +108,14 @@ export class MemberService {
         })
       );
     }
-    const member = await this.memberRepository
-      .createQueryBuilder('member')
-      .innerJoinAndSelect('member.translations', 'translation', 'translation.language = :language AND translation.slug = :slug', {
-        language,
-        slug,
-      })
-      .getOne();
+    const member = await this.memberRepository.findOne({
+      where: { slug },
+      relations: ['translations'],
+    });
     if (!member) {
+      throw new NotFoundException(this.i18n.t('global.member.MEMBER_NOT_FOUND'));
+    }
+    if (!member.translations.some(t => t.language === language)) {
       throw new NotFoundException(this.i18n.t('global.member.TRANSLATION_NOT_FOUND', { args: { lang: language } }));
     }
     return member;
@@ -107,12 +128,22 @@ export class MemberService {
     }
     const member = await this.findOne(id);
 
-    // Cập nhật các trường của Member
+    // Kiểm tra trùng lặp slug nếu cập nhật
+    if (dto.slug && dto.slug !== member.slug) {
+      const existingMember = await this.memberRepository.findOne({ where: { slug: dto.slug } });
+      if (existingMember) {
+        this.logger.warn(`Duplicate slug '${dto.slug}'`);
+        throw new BadRequestException(
+          this.i18n.t('global.member.DUPLICATE_SLUG', { args: { slug: dto.slug } })
+        );
+      }
+      member.slug = dto.slug;
+    }
+
     if (dto.image) member.image = dto.image;
     if (dto.isActive !== undefined) member.isActive = dto.isActive;
     if (dto.canonicalUrl !== undefined) member.canonicalUrl = dto.canonicalUrl;
 
-    // Cập nhật translations (chỉ thêm hoặc cập nhật, không xóa toàn bộ)
     if (dto.translations) {
       const existingTranslations = await this.translationRepository.find({ where: { member: { id } } });
       const updatedTranslations = await Promise.all(
@@ -178,22 +209,19 @@ export class MemberService {
               t.id &&
               !isNaN(t.id) &&
               t.id > 0 &&
-              typeof t.slug === 'string' &&
-              t.slug.trim() &&
               typeof t.name === 'string' &&
               t.name.trim();
             if (!isValid) {
               this.logger.debug(
-                `Translation for member id=${member.id} (lang=${lang}) invalid: slug=${t.slug}, name=${t.name}`
+                `Translation for member id=${member.id} (lang=${lang}) invalid: name=${t.name}`
               );
             }
             return isValid;
           });
-          return member.isActive && hasValidTranslation;
+          return member.isActive && hasValidTranslation && member.slug;
         })
         .map((member) => {
-          const translation = member.translations.find((t) => t.language === lang);
-          const url = member.canonicalUrl || `${process.env.DOMAIN}/${lang}/member/${translation.slug}`;
+          const url = member.canonicalUrl || `${process.env.DOMAIN}/member/${member.slug}`;
           this.logger.debug(`Generated URL: ${url}`);
           return url;
         });

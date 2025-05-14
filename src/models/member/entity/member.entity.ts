@@ -1,3 +1,4 @@
+// src/member/entity/member.entity.ts
 import { Entity, Column, PrimaryGeneratedColumn, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { MemberTranslation } from './member-translation.entity';
 import { ApiProperty } from '@nestjs/swagger';
@@ -12,12 +13,16 @@ export class Member {
   @ApiProperty({ description: 'URL or path to member image' })
   image: string;
 
+  @Column({ unique: true })
+  @ApiProperty({ description: 'URL-friendly slug for SEO' })
+  slug: string; // Thêm slug
+
   @Column({ default: true })
   @ApiProperty({ description: 'Indicates if the member is active' })
   isActive: boolean;
 
   @Column({ nullable: true })
-  @ApiProperty({ description: 'Canonical URL for SEO (if not language-specific)', required: false })
+  @ApiProperty({ description: 'Canonical URL for SEO', required: false })
   canonicalUrl: string;
 
   @CreateDateColumn()

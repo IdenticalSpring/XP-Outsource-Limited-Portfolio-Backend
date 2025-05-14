@@ -1,9 +1,10 @@
+// src/member/entity/member-translation.entity.ts
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, Index } from 'typeorm';
 import { Member } from './member.entity';
 import { ApiProperty } from '@nestjs/swagger';
 
 @Entity()
-@Index(['language', 'member'], { unique: true }) 
+@Index(['language', 'member'], { unique: true })
 export class MemberTranslation {
   @PrimaryGeneratedColumn()
   @ApiProperty({ description: 'Unique identifier for the translation' })
@@ -16,11 +17,6 @@ export class MemberTranslation {
   @Column()
   @ApiProperty({ description: 'Translated name of the member' })
   name: string;
-
-  @Column()
-  @ApiProperty({ description: 'URL-friendly slug for SEO' })
-  @Index({ unique: true })
-  slug: string;
 
   @Column()
   @ApiProperty({ description: 'Meta title for SEO' })

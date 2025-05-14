@@ -1,3 +1,4 @@
+// src/member/member.controller.ts
 import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Query, BadRequestException, NotFoundException } from '@nestjs/common';
 import { MemberService } from './member.service';
 import { CreateMemberDto, UpdateMemberDto } from './member.dto';
@@ -19,20 +20,11 @@ export class MemberController {
     const num = parseInt(param, 10);
     if (isNaN(num) || num <= 0) {
       this.logger.warn(`Invalid ${paramName}: ${param}`);
-      const message = i18n.t('global.global.INVALID_NUMBER_PARAM', { args: { param: paramName } });
-      this.logger.debug(`i18n message: ${message}, args: ${JSON.stringify({ param: paramName })}`);
-      throw new BadRequestException(message);
+      throw new BadRequestException(i18n.t('global.global.INVALID_NUMBER_PARAM', { args: { param: paramName } }));
     }
     return num;
   }
 
-  private validateStringParam(param: string, paramName: string, i18n: I18nContext): string {
-    if (!param || typeof param !== 'string' || param.trim() === '') {
-      this.logger.warn(`Invalid ${paramName}: ${param}`);
-      throw new BadRequestException(i18n.t('global.global.INVALID_PARAM', { args: { param: paramName } }));
-    }
-    return param;
-  }
   @Get()
   @ApiOperation({ summary: 'Get all members' })
   @ApiResponse({ status: 200, type: [Member] })
@@ -92,7 +84,6 @@ export class MemberController {
     @Param('slug') slug: string,
     @I18n() i18n: I18nContext,
   ): Promise<Member> {
-    this.validateStringParam(slug, 'slug', i18n);
     this.logger.log(`Fetching member with slug ${slug} for language ${lang}`);
     if (!SUPPORTED_LANGUAGES.includes(lang as typeof SUPPORTED_LANGUAGES[number])) {
       throw new BadRequestException(
@@ -118,7 +109,6 @@ export class MemberController {
     @I18n() i18n: I18nContext
   ): Promise<{ message: string }> {
     const memberId = this.validateNumberParam(id, 'memberId', i18n);
-    this.validateStringParam(language, 'language', i18n);
     try {
       await this.memberService.deleteTranslation(memberId, language);
       return { message: i18n.t('global.member.TRANSLATION_DELETED', { args: { lang: language } }) };
@@ -133,13 +123,13 @@ export class MemberController {
     }
   }
 
- @Post()
+  @Post()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create member' })
   @ApiResponse({ status: 201, type: Member })
   async create(@Body() dto: CreateMemberDto, @I18n() i18n: I18nContext): Promise<{ message: string; member: Member }> {
-    this.logger.log(`Creating new member with image: ${dto.image}, canonicalUrl: ${dto.canonicalUrl || 'none'}`);
+    this.logger.log(`Creating new member with slug: ${dto.slug}, image: ${dto.image}, canonicalUrl: ${dto.canonicalUrl || 'none'}`);
     try {
       const member = await this.memberService.create(dto);
       return {
@@ -163,7 +153,7 @@ export class MemberController {
       throw new BadRequestException(i18n.t('global.global.INVALID_NUMBER_PARAM', { args: { param: 'id' } }));
     }
     const memberId = this.validateNumberParam(id, 'id', i18n);
-    this.logger.log(`Updating member id=${memberId}, canonicalUrl: ${dto.canonicalUrl || 'none'}`);
+    this.logger.log(`Updating member id=${memberId}, slug: ${dto.slug || 'unchanged'}, canonicalUrl: ${dto.canonicalUrl || 'none'}`);
     try {
       return await this.memberService.update(memberId, dto);
     } catch (error) {
@@ -171,6 +161,7 @@ export class MemberController {
       throw error instanceof NotFoundException ? error : new BadRequestException(i18n.t('global.global.INTERNAL_ERROR'));
     }
   }
+
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
