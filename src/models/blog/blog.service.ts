@@ -108,31 +108,40 @@ export class BlogService {
         : new BadRequestException(this.i18n.t('global.global.INTERNAL_ERROR'));
     }
   }
-
-
 async findAll(page: number = 1, limit: number = 10): Promise<{ blogs: Blog[]; total: number }> {
-  this.logger.log(`Fetching blogs: page=${page}, limit=${limit}`);
-  try {
-    const [blogs, total] = await this.blogRepository.findAndCount({
-      relations: ['translations'],
-      skip: (page - 1) * limit,
-      take: limit,
-    });
-    const validBlogs = blogs.filter(
-      (blog) =>
-        blog.id &&
-        blog.slug &&
-        blog.translations &&
-        blog.translations.length > 0 &&
-        blog.translations.some((t) => t.title && t.language)
-    );
-    this.logger.debug(`Filtered ${validBlogs.length} valid blogs out of ${blogs.length}`);
-    return { blogs: validBlogs, total };
-  } catch (error) {
-    this.logger.error(`Error fetching blogs: ${error.message}`, error.stack);
-    throw new BadRequestException(this.i18n.t('global.global.INTERNAL_ERROR'));
+    this.logger.log(`Fetching blogs: page=${page}, limit=${limit}`);
+    try {
+      const blogs = await this.blogRepository
+        .createQueryBuilder("blog")
+        .innerJoinAndSelect("blog.translations", "translations")
+        .where("blog.id IS NOT NULL")
+        .andWhere("blog.slug IS NOT NULL")
+        .andWhere("translations.id IS NOT NULL")
+        .andWhere("translations.title IS NOT NULL")
+        .andWhere("translations.language IS NOT NULL")
+        .orderBy("blog.id", "ASC") // Đảm bảo thứ tự nhất quán
+        .skip((page - 1) * limit)
+        .take(limit)
+        .getMany();
+
+      const total = await this.blogRepository
+        .createQueryBuilder("blog")
+        .innerJoin("blog.translations", "translations")
+        .where("blog.id IS NOT NULL")
+        .andWhere("blog.slug IS NOT NULL")
+        .andWhere("translations.id IS NOT NULL")
+        .andWhere("translations.title IS NOT NULL")
+        .andWhere("translations.language IS NOT NULL")
+        .distinct(true)
+        .getCount();
+
+      this.logger.debug(`Fetched ${blogs.length} valid blogs for page ${page}, total=${total}`);
+      return { blogs, total };
+    } catch (error) {
+      this.logger.error(`Error fetching blogs: ${error.message}`, error.stack);
+      throw new BadRequestException(this.i18n.t('global.global.INTERNAL_ERROR'));
+    }
   }
-}
 
   async findOne(id: number): Promise<Blog> {
     if (isNaN(id) || id <= 0) {
