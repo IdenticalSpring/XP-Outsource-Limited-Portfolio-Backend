@@ -11,6 +11,7 @@ import { MemberModule } from './models/member/member.module';
 import { AdminModule } from './models/admin/admin.module';
 import * as path from 'path';
 import { SitemapModule } from './models/sitemap/sitemap.module';
+import { ImagesModule } from './models/images/images.module';
 
 @Module({
   imports: [
@@ -67,6 +68,7 @@ import { SitemapModule } from './models/sitemap/sitemap.module';
     MemberModule,
     AdminModule,
     SitemapModule,
+    ImagesModule,
   ],
 })
 export class AppModule {}
