@@ -12,6 +12,7 @@ import { AdminModule } from './models/admin/admin.module';
 import * as path from 'path';
 import { SitemapModule } from './models/sitemap/sitemap.module';
 import { ImagesModule } from './models/images/images.module';
+import { EmailModule } from './email/email.module';
 
 @Module({
   imports: [
@@ -69,6 +70,7 @@ import { ImagesModule } from './models/images/images.module';
     AdminModule,
     SitemapModule,
     ImagesModule,
+    EmailModule,
   ],
 })
 export class AppModule {}
