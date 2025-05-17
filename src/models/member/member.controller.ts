@@ -1,9 +1,8 @@
-// src/member/member.controller.ts
 import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Query, BadRequestException, NotFoundException } from '@nestjs/common';
 import { MemberService } from './member.service';
 import { CreateMemberDto, UpdateMemberDto } from './member.dto';
 import { Member } from './entity/member.entity';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../admin/jwt-auth.guard';
 import { I18n, I18nContext } from 'nestjs-i18n';
 import { SUPPORTED_LANGUAGES } from '../../config/languages';
@@ -26,11 +25,27 @@ export class MemberController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all members' })
+  @ApiOperation({ summary: 'Get all members with pagination' })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default: 1)' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Number of items per page (default: 10)' })
   @ApiResponse({ status: 200, type: [Member] })
-  async findAll(): Promise<Member[]> {
-    this.logger.log('Fetching all members');
-    return this.memberService.findAll();
+  async findAll(
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '10',
+    @I18n() i18n: I18nContext,
+  ): Promise<{ data: Member[]; total: number; page: number; limit: number }> {
+    const pageNum = this.validateNumberParam(page, 'page', i18n);
+    const limitNum = this.validateNumberParam(limit, 'limit', i18n);
+
+    this.logger.log(`Fetching members with page=${pageNum}, limit=${limitNum}`);
+    try {
+      return await this.memberService.findAll(pageNum, limitNum);
+    } catch (error) {
+      this.logger.error(`Error fetching members with pagination: ${error.message}`, error.stack);
+      throw error instanceof BadRequestException
+        ? error
+        : new BadRequestException(i18n.t('global.global.INTERNAL_ERROR'));
+    }
   }
 
   @Get('sitemap')

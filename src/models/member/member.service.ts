@@ -1,4 +1,3 @@
-// src/member/member.service.ts
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -78,9 +77,38 @@ export class MemberService {
     }
   }
 
-  async findAll(): Promise<Member[]> {
-    this.logger.log('Fetching all members');
-    return this.memberRepository.find({ relations: ['translations'] });
+  async findAll(page: number = 1, limit: number = 10): Promise<{ data: Member[]; total: number; page: number; limit: number }> {
+    this.logger.log(`Fetching members with pagination: page=${page}, limit=${limit}`);
+
+    // Validation
+    if (page <= 0 || limit <= 0) {
+      this.logger.warn(`Invalid pagination params: page=${page}, limit=${limit}`);
+      throw new BadRequestException(
+        this.i18n.t('global.global.INVALID_PAGINATION_PARAM', {
+          args: { param: page <= 0 ? 'page' : 'limit' },
+        })
+      );
+    }
+
+    try {
+      const skip = (page - 1) * limit;
+      const [members, total] = await this.memberRepository.findAndCount({
+        relations: ['translations'],
+        skip,
+        take: limit,
+      });
+
+      this.logger.debug(`Found ${members.length} members, total: ${total}`);
+      return {
+        data: members,
+        total,
+        page,
+        limit,
+      };
+    } catch (error) {
+      this.logger.error(`Error fetching members with pagination: ${error.message}`, error.stack);
+      throw new BadRequestException(this.i18n.t('global.global.INTERNAL_ERROR'));
+    }
   }
 
   async findOne(id: number): Promise<Member> {
