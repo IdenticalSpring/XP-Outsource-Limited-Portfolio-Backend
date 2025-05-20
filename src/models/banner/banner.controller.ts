@@ -1,6 +1,6 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Query, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, BadRequestException, NotFoundException } from '@nestjs/common';
 import { BannerService } from './banner.service';
-import { CreateBannerDto, UpdateBannerDto } from './banner.dto';
+import { CreateBannerDto, UpdateBannerDto, BannerTranslationDto } from './banner.dto';
 import { Banner } from './entity/banner.entity';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../admin/jwt-auth.guard';
@@ -58,7 +58,6 @@ export class BannerController {
     return this.bannerService.findAll();
   }
 
-
   @Get('banner/:id')
   @ApiOperation({ summary: 'Get banner by ID' })
   @ApiResponse({ status: 200, type: Banner })
@@ -113,6 +112,29 @@ export class BannerController {
         : new BadRequestException(i18n.t('global.global.INTERNAL_ERROR'));
     }
   }
+
+  @Post('banner/:id/translation')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Add or update a translation for a banner' })
+  @ApiResponse({ status: 201, type: Banner })
+  async addOrUpdateTranslation(
+    @Param('id') id: string,
+    @Body() translationDto: BannerTranslationDto,
+    @I18n() i18n: I18nContext
+  ): Promise<Banner> {
+    const bannerId = this.validateNumberParam(id, 'id', i18n);
+    this.validateStringParam(translationDto.language, 'language', i18n);
+    try {
+      return await this.bannerService.addOrUpdateTranslation(bannerId, translationDto);
+    } catch (error) {
+      this.logger.error(`Error adding/updating translation for banner ${bannerId}: ${error.message}`, error.stack);
+      throw error instanceof BadRequestException || error instanceof NotFoundException
+        ? error
+        : new BadRequestException(i18n.t('global.global.INTERNAL_ERROR'));
+    }
+  }
+
   @Delete('banner/translation/:id/:language')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()

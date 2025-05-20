@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Banner } from './entity/banner.entity';
 import { BannerTranslation } from './entity/banner-translation.entity';
-import { CreateBannerDto, UpdateBannerDto } from './banner.dto';
+import { CreateBannerDto, UpdateBannerDto, BannerTranslationDto } from './banner.dto';
 import { I18nService } from 'nestjs-i18n';
 import { SUPPORTED_LANGUAGES } from '../../config/languages';
 
@@ -111,6 +111,42 @@ export class BannerService {
     return this.bannerRepository.save(banner);
   }
 
+  async addOrUpdateTranslation(id: number, translationDto: BannerTranslationDto): Promise<Banner> {
+    this.logger.log(`Adding/updating translation for banner ${id}, language ${translationDto.language}`);
+    const banner = await this.findOne(id);
+
+    // Kiểm tra xem translation đã tồn tại chưa
+    const existingTranslation = banner.translations.find(
+      (t) => t.language === translationDto.language
+    );
+
+    if (existingTranslation) {
+      // Cập nhật translation hiện có
+      Object.assign(existingTranslation, translationDto);
+      await this.translationRepository.save(existingTranslation);
+    } else {
+      // Thêm translation mới
+      const newTranslation = this.translationRepository.create({
+        ...translationDto,
+        banner,
+      });
+      await this.translationRepository.save(newTranslation);
+    }
+
+    // Tải lại banner với tất cả translations từ database
+    const updatedBanner = await this.bannerRepository.findOne({
+      where: { id },
+      relations: ['translations'],
+    });
+
+    if (!updatedBanner) {
+      throw new NotFoundException(this.i18n.t('global.banner.BANNER_NOT_FOUND'));
+    }
+
+    this.logger.log(`Updated translations for banner ${id}: ${JSON.stringify(updatedBanner.translations)}`);
+    return updatedBanner;
+  }
+
   async remove(id: number): Promise<void> {
     const banner = await this.findOne(id);
     await this.bannerRepository.remove(banner);
@@ -143,10 +179,9 @@ export class BannerService {
     try {
       const banners = await this.bannerRepository.find({ relations: ['translations'] });
       this.logger.debug(`Found ${banners.length} banners`);
-  
+
       const urls = banners
         .filter((banner) => {
-          // Kiểm tra id và slug
           if (
             !banner.id ||
             isNaN(banner.id) ||
@@ -158,14 +193,13 @@ export class BannerService {
             this.logger.warn(`Invalid banner data: id=${banner.id}, slug=${banner.slug}`);
             return false;
           }
-  
-          // Kiểm tra translations
+
           const translations = banner.translations || [];
           if (!translations.length) {
             this.logger.debug(`Banner ${banner.slug} has no translations`);
             return false;
           }
-  
+
           const hasValidTranslation = translations.some((t) => {
             const isValid =
               t.language === lang &&
@@ -183,7 +217,7 @@ export class BannerService {
             }
             return isValid;
           });
-  
+
           if (!hasValidTranslation) {
             this.logger.debug(`Banner ${banner.slug} has no valid translation for ${lang}`);
             return false;
@@ -195,14 +229,14 @@ export class BannerService {
           this.logger.debug(`Generated URL: ${url}`);
           return url;
         });
-  
+
       if (urls.length === 0) {
         this.logger.warn(`No valid translations found for banners in language ${lang}`);
         throw new BadRequestException(
           this.i18n.t('global.global.NO_VALID_TRANSLATIONS', { args: { lang } })
         );
       }
-  
+
       this.logger.log(`Generated ${urls.length} URLs for banner sitemap`);
       return { urls };
     } catch (error) {
