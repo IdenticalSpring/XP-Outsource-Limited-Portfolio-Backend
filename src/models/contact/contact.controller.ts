@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Query, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, BadRequestException, NotFoundException } from '@nestjs/common';
 import { ContactService } from './contact.service';
 import { CreateContactDto, UpdateContactDto } from './contact.dto';
 import { Contact } from './entity/contact.entity';
@@ -50,6 +50,28 @@ export class ContactController {
     } catch (error) {
       this.logger.error(`Error creating contact: ${error.message}`, error.stack);
       throw error instanceof BadRequestException ? error : new BadRequestException(i18n.t('global.global.INTERNAL_ERROR'));
+    }
+  }
+
+  @Post(':id/translation')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Add or update a translation for a contact' })
+  @ApiResponse({ status: 201, type: Contact })
+  async addOrUpdateTranslation(
+    @Param('id') id: string,
+    @Body() translationDto: CreateContactDto['translations'][0],
+    @I18n() i18n: I18nContext
+  ): Promise<Contact> {
+    const contactId = this.validateNumberParam(id, 'id', i18n);
+    this.validateStringParam(translationDto.language, 'language', i18n);
+    try {
+      return await this.contactService.addOrUpdateTranslation(contactId, translationDto);
+    } catch (error) {
+      this.logger.error(`Error adding/updating translation for contact ${contactId}: ${error.message}`, error.stack);
+      throw error instanceof BadRequestException || error instanceof NotFoundException
+        ? error
+        : new BadRequestException(i18n.t('global.global.INTERNAL_ERROR'));
     }
   }
 

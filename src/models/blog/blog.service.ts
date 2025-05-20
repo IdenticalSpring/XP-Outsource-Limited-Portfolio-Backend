@@ -1,10 +1,9 @@
-// src/models/blog/blog.service.ts
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Blog } from './entity/blog.entity';
 import { BlogTranslation } from './entity/blog-translation.entity';
-import { CreateBlogDto, UpdateBlogDto, BlogTranslationDto, DeleteTranslationDto } from './blog.dto';
+import { CreateBlogDto, UpdateBlogDto, BlogTranslationDto } from './blog.dto';
 import { I18nService } from 'nestjs-i18n';
 import sanitizeHtml from 'sanitize-html';
 import { SUPPORTED_LANGUAGES } from '../../config/languages';
@@ -89,6 +88,46 @@ export class BlogService {
     }
   }
 
+  async addOrUpdateTranslation(blogId: number, translationDto: BlogTranslationDto): Promise<Blog> {
+    this.logger.log(`Adding/updating translation for blog ${blogId}, language ${translationDto.language}`);
+    const blog = await this.findOne(blogId);
+
+    // Kiểm tra xem translation đã tồn tại chưa
+    const existingTranslation = blog.translations.find(
+      (t) => t.language === translationDto.language
+    );
+
+    if (existingTranslation) {
+      // Cập nhật translation hiện có
+      Object.assign(existingTranslation, {
+        ...translationDto,
+        content: this.sanitizeContent(translationDto.content),
+      });
+      await this.translationRepository.save(existingTranslation);
+    } else {
+      // Thêm translation mới
+      const newTranslation = this.translationRepository.create({
+        ...translationDto,
+        content: this.sanitizeContent(translationDto.content),
+        blog,
+      });
+      await this.translationRepository.save(newTranslation);
+    }
+
+    // Tải lại blog với tất cả translations từ database
+    const updatedBlog = await this.blogRepository.findOne({
+      where: { id: blogId },
+      relations: ['translations'],
+    });
+
+    if (!updatedBlog) {
+      throw new NotFoundException(this.i18n.t('global.blog.BLOG_NOT_FOUND'));
+    }
+
+    this.logger.log(`Updated translations for blog ${blogId}: ${JSON.stringify(updatedBlog.translations)}`);
+    return updatedBlog;
+  }
+
   async removeTranslation(blogId: number, translationId: number): Promise<void> {
     if (isNaN(blogId) || blogId <= 0 || isNaN(translationId) || translationId <= 0) {
       this.logger.warn(`Invalid params: blogId=${blogId}, translationId=${translationId}`);
@@ -108,7 +147,8 @@ export class BlogService {
         : new BadRequestException(this.i18n.t('global.global.INTERNAL_ERROR'));
     }
   }
-async findAll(page: number = 1, limit: number = 10): Promise<{ blogs: Blog[]; total: number }> {
+
+  async findAll(page: number = 1, limit: number = 10): Promise<{ blogs: Blog[]; total: number }> {
     this.logger.log(`Fetching blogs: page=${page}, limit=${limit}`);
     try {
       const blogs = await this.blogRepository
@@ -119,7 +159,7 @@ async findAll(page: number = 1, limit: number = 10): Promise<{ blogs: Blog[]; to
         .andWhere("translations.id IS NOT NULL")
         .andWhere("translations.title IS NOT NULL")
         .andWhere("translations.language IS NOT NULL")
-        .orderBy("blog.id", "ASC") // Đảm bảo thứ tự nhất quán
+        .orderBy("blog.id", "ASC")
         .skip((page - 1) * limit)
         .take(limit)
         .getMany();
@@ -312,6 +352,7 @@ async findAll(page: number = 1, limit: number = 10): Promise<{ blogs: Blog[]; to
       throw error instanceof BadRequestException ? error : new BadRequestException(this.i18n.t('global.global.INTERNAL_ERROR'));
     }
   }
+
   async removeTranslationByLanguage(blogId: number, language: string): Promise<void> {
     this.logger.debug(`Attempting to delete translation for blogId=${blogId}, language=${language}`);
     if (isNaN(blogId) || blogId <= 0) {

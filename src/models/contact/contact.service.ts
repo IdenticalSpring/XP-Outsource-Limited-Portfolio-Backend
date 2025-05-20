@@ -56,6 +56,49 @@ export class ContactService {
     }
   }
 
+  async addOrUpdateTranslation(contactId: number, translationDto: CreateContactDto['translations'][0]): Promise<Contact> {
+    this.logger.log(`Adding/updating translation for contact ${contactId}, language ${translationDto.language}`);
+    const contact = await this.findOne(contactId);
+
+    // Kiểm tra xem translation đã tồn tại chưa
+    const existingTranslation = contact.translations.find(
+      (t) => t.language === translationDto.language
+    );
+
+    if (existingTranslation) {
+      // Cập nhật translation hiện có
+      Object.assign(existingTranslation, translationDto);
+      await this.translationRepository.save(existingTranslation);
+    } else {
+      // Thêm translation mới
+      if (!SUPPORTED_LANGUAGES.includes(translationDto.language as typeof SUPPORTED_LANGUAGES[number])) {
+        throw new BadRequestException(
+          this.i18n.t('global.global.INVALID_LANGUAGE', {
+            args: { lang: translationDto.language, supported: SUPPORTED_LANGUAGES.join(', ') },
+          })
+        );
+      }
+      const newTranslation = this.translationRepository.create({
+        ...translationDto,
+        contact,
+      });
+      await this.translationRepository.save(newTranslation);
+    }
+
+    // Tải lại contact với tất cả translations từ database
+    const updatedContact = await this.contactRepository.findOne({
+      where: { id: contactId },
+      relations: ['translations'],
+    });
+
+    if (!updatedContact) {
+      throw new NotFoundException(this.i18n.t('global.contact.CONTACT_NOT_FOUND'));
+    }
+
+    this.logger.log(`Updated translations for contact ${contactId}: ${JSON.stringify(updatedContact.translations)}`);
+    return updatedContact;
+  }
+
   async findAll(): Promise<Contact[]> {
     this.logger.log('Fetching all contacts');
     return this.contactRepository.find({ relations: ['translations'] });

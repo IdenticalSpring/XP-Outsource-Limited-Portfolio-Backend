@@ -77,6 +77,49 @@ export class MemberService {
     }
   }
 
+  async addOrUpdateTranslation(memberId: number, translationDto: CreateMemberDto['translations'][0]): Promise<Member> {
+    this.logger.log(`Adding/updating translation for member ${memberId}, language ${translationDto.language}`);
+    const member = await this.findOne(memberId);
+
+    // Kiểm tra xem translation đã tồn tại chưa
+    const existingTranslation = member.translations.find(
+      (t) => t.language === translationDto.language
+    );
+
+    if (existingTranslation) {
+      // Cập nhật translation hiện có
+      Object.assign(existingTranslation, translationDto);
+      await this.translationRepository.save(existingTranslation);
+    } else {
+      // Thêm translation mới
+      if (!SUPPORTED_LANGUAGES.includes(translationDto.language as typeof SUPPORTED_LANGUAGES[number])) {
+        throw new BadRequestException(
+          this.i18n.t('global.global.INVALID_LANGUAGE', {
+            args: { lang: translationDto.language, supported: SUPPORTED_LANGUAGES.join(', ') },
+          })
+        );
+      }
+      const newTranslation = this.translationRepository.create({
+        ...translationDto,
+        member,
+      });
+      await this.translationRepository.save(newTranslation);
+    }
+
+    // Tải lại member với tất cả translations từ database
+    const updatedMember = await this.memberRepository.findOne({
+      where: { id: memberId },
+      relations: ['translations'],
+    });
+
+    if (!updatedMember) {
+      throw new NotFoundException(this.i18n.t('global.member.MEMBER_NOT_FOUND'));
+    }
+
+    this.logger.log(`Updated translations for member ${memberId}: ${JSON.stringify(updatedMember.translations)}`);
+    return updatedMember;
+  }
+
   async findAll(page: number = 1, limit: number = 10): Promise<{ data: Member[]; total: number; page: number; limit: number }> {
     this.logger.log(`Fetching members with pagination: page=${page}, limit=${limit}`);
 

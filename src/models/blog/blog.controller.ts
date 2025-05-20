@@ -1,7 +1,6 @@
-// src/models/blog/blog.controller.ts
 import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Query, BadRequestException, NotFoundException } from '@nestjs/common';
 import { BlogService } from './blog.service';
-import { CreateBlogDto, UpdateBlogDto, BlogTranslationDto, DeleteTranslationDto } from './blog.dto';
+import { CreateBlogDto, UpdateBlogDto, BlogTranslationDto } from './blog.dto';
 import { Blog } from './entity/blog.entity';
 import { BlogTranslation } from './entity/blog-translation.entity';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
@@ -93,9 +92,28 @@ export class BlogController {
     }
   }
 
-  
+  @Post('blog/:id/translation')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Add or update a translation for a blog' })
+  @ApiResponse({ status: 201, type: Blog })
+  async addOrUpdateTranslation(
+    @Param('id') id: string,
+    @Body() translationDto: BlogTranslationDto,
+    @I18n() i18n: I18nContext
+  ): Promise<Blog> {
+    const blogId = this.validateNumberParam(id, 'id', i18n);
+    this.validateStringParam(translationDto.language, 'language', i18n);
+    try {
+      return await this.blogService.addOrUpdateTranslation(blogId, translationDto);
+    } catch (error) {
+      this.logger.error(`Error adding/updating translation for blog ${blogId}: ${error.message}`, error.stack);
+      throw error instanceof BadRequestException || error instanceof NotFoundException
+        ? error
+        : new BadRequestException(i18n.t('global.global.INTERNAL_ERROR'));
+    }
+  }
 
- 
   @Delete('translations/:id/:language')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()

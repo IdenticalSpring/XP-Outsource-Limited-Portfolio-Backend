@@ -24,6 +24,55 @@ export class MemberController {
     return num;
   }
 
+  private validateStringParam(param: string, paramName: string, i18n: I18nContext): string {
+    if (!param || typeof param !== 'string' || param.trim() === '') {
+      this.logger.warn(`Invalid ${paramName}: ${param}`);
+      throw new BadRequestException(i18n.t('global.global.INVALID_PARAM', { args: { param: paramName } }));
+    }
+    return param;
+  }
+
+  @Post()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Create member' })
+  @ApiResponse({ status: 201, type: Member })
+  async create(@Body() dto: CreateMemberDto, @I18n() i18n: I18nContext): Promise<{ message: string; member: Member }> {
+    this.logger.log(`Creating new member with slug: ${dto.slug}, image: ${dto.image}, canonicalUrl: ${dto.canonicalUrl || 'none'}`);
+    try {
+      const member = await this.memberService.create(dto);
+      return {
+        message: i18n.t('global.member.MEMBER_CREATED'),
+        member,
+      };
+    } catch (error) {
+      this.logger.error(`Error creating member: ${error.message}`, error.stack);
+      throw error instanceof BadRequestException ? error : new BadRequestException(i18n.t('global.global.INTERNAL_ERROR'));
+    }
+  }
+
+  @Post(':id/translation')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Add or update a translation for a member' })
+  @ApiResponse({ status: 201, type: Member })
+  async addOrUpdateTranslation(
+    @Param('id') id: string,
+    @Body() translationDto: CreateMemberDto['translations'][0],
+    @I18n() i18n: I18nContext
+  ): Promise<Member> {
+    const memberId = this.validateNumberParam(id, 'id', i18n);
+    this.validateStringParam(translationDto.language, 'language', i18n);
+    try {
+      return await this.memberService.addOrUpdateTranslation(memberId, translationDto);
+    } catch (error) {
+      this.logger.error(`Error adding/updating translation for member ${memberId}: ${error.message}`, error.stack);
+      throw error instanceof BadRequestException || error instanceof NotFoundException
+        ? error
+        : new BadRequestException(i18n.t('global.global.INTERNAL_ERROR'));
+    }
+  }
+
   @Get()
   @ApiOperation({ summary: 'Get all members with pagination' })
   @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default: 1)' })
@@ -124,6 +173,7 @@ export class MemberController {
     @I18n() i18n: I18nContext
   ): Promise<{ message: string }> {
     const memberId = this.validateNumberParam(id, 'memberId', i18n);
+    this.validateStringParam(language, 'language', i18n);
     try {
       await this.memberService.deleteTranslation(memberId, language);
       return { message: i18n.t('global.member.TRANSLATION_DELETED', { args: { lang: language } }) };
@@ -135,25 +185,6 @@ export class MemberController {
       throw error instanceof BadRequestException || error instanceof NotFoundException
         ? error
         : new BadRequestException(i18n.t('global.global.INTERNAL_ERROR'));
-    }
-  }
-
-  @Post()
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Create member' })
-  @ApiResponse({ status: 201, type: Member })
-  async create(@Body() dto: CreateMemberDto, @I18n() i18n: I18nContext): Promise<{ message: string; member: Member }> {
-    this.logger.log(`Creating new member with slug: ${dto.slug}, image: ${dto.image}, canonicalUrl: ${dto.canonicalUrl || 'none'}`);
-    try {
-      const member = await this.memberService.create(dto);
-      return {
-        message: i18n.t('global.member.MEMBER_CREATED'),
-        member,
-      };
-    } catch (error) {
-      this.logger.error(`Error creating member: ${error.message}`, error.stack);
-      throw error instanceof BadRequestException ? error : new BadRequestException(i18n.t('global.global.INTERNAL_ERROR'));
     }
   }
 
