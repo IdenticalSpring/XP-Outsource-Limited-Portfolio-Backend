@@ -1,46 +1,24 @@
-import { IsDate, IsNumber } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { IsDateString, IsInt, Min } from 'class-validator';
 
 export class CreateStatisticsDto {
-  @IsDate()
   @ApiProperty()
-  date: Date;
+  @IsDateString()
+  date: string;
 
-  @IsNumber()
   @ApiProperty()
-  accessCount: number;
-
-  @IsNumber()
-  @ApiProperty()
+  @IsInt()
+  @Min(0)
   totalAccessDate: number;
-
-  @IsNumber()
-  @ApiProperty()
-  totalAccessWeek: number;
-
-  @IsNumber()
-  @ApiProperty()
-  totalAccessMonth: number;
 }
 
 export class UpdateStatisticsDto {
-  @IsDate()
   @ApiProperty({ required: false })
-  date?: Date;
+  @IsDateString()
+  date?: string;
 
-  @IsNumber()
   @ApiProperty({ required: false })
-  accessCount?: number;
-
-  @IsNumber()
-  @ApiProperty({ required: false })
+  @IsInt()
+  @Min(0)
   totalAccessDate?: number;
-
-  @IsNumber()
-  @ApiProperty({ required: false })
-  totalAccessWeek?: number;
-
-  @IsNumber()
-  @ApiProperty({ required: false })
-  totalAccessMonth?: number;
 }
