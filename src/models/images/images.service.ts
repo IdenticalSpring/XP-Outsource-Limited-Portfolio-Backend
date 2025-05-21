@@ -6,11 +6,19 @@ import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class ImagesService {
-  private readonly publicImagesPath = path.join(__dirname, '..', '..', '..', 'public', 'images');
-  private readonly baseUrl = process.env.DOMAIN + '/images';
+  private readonly publicImagesPath = path.join(
+    __dirname,
+    '..',
+    '..',
+    '..',
+    'public',
+    'images',
+  );
+  private readonly baseUrl = process.env.DOMAIN + 'images';
 
-
-  async uploadImage(file: Express.Multer.File): Promise<{ filename: string; url: string }> {
+  async uploadImage(
+    file: Express.Multer.File,
+  ): Promise<{ filename: string; url: string }> {
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }
@@ -21,7 +29,7 @@ export class ImagesService {
 
     return {
       filename,
-      url: `${this.baseUrl}/${filename}`, 
+      url: `${this.baseUrl}/${filename}`,
     };
   }
 
@@ -32,7 +40,6 @@ export class ImagesService {
   ): Promise<{ data: { filename: string; url: string }[]; total: number }> {
     try {
       let files = await fs.readdir(this.publicImagesPath);
-
 
       if (filename) {
         const searchTerm = filename.toLowerCase();
