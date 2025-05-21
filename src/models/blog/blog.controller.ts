@@ -234,38 +234,38 @@ export class BlogController {
     }
   }
 
-  // @Get('blog')
-  // @ApiOperation({ summary: 'Get all blogs' })
-  // @ApiResponse({ status: 200 })
-  // async findAll(
-  //   @Query('page') page: number = 1,
-  //   @Query('limit') limit: number = 10,
-  //   @I18n() i18n: I18nContext,
-  // ): Promise<{ blogs: Blog[]; total: number }> {
-  //   this.logger.log(`Fetching blogs: page=${page}, limit=${limit}`);
-  //   try {
-  //     const { page: validatedPage, limit: validatedLimit } = this.validatePaginationParams(page, limit, i18n);
-  //     return await this.blogService.findAll(validatedPage, validatedLimit);
-  //   } catch (error) {
-  //     this.logger.error(`Error fetching blogs: ${error.message}`, error.stack);
-  //     throw error instanceof BadRequestException ? error : new BadRequestException(i18n.t('global.global.INTERNAL_ERROR'));
-  //   }
-  // }
-
   @Get('blog')
   @ApiOperation({ summary: 'Get all blogs' })
-  @ApiResponse({ status: 200, type: [Blog] })
-  async findAll(@I18n() i18n: I18nContext): Promise<Blog[]> {
-    this.logger.log(`Fetching all blogs`);
+  @ApiResponse({ status: 200 })
+  async findAll(
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+    @I18n() i18n: I18nContext,
+  ): Promise<{ blogs: Blog[]; total: number }> {
+    this.logger.log(`Fetching blogs: page=${page}, limit=${limit}`);
     try {
-      return await this.blogService.findAll();
+      const { page: validatedPage, limit: validatedLimit } = this.validatePaginationParams(page, limit, i18n);
+      return await this.blogService.findAll(validatedPage, validatedLimit);
     } catch (error) {
       this.logger.error(`Error fetching blogs: ${error.message}`, error.stack);
-      throw error instanceof BadRequestException
-        ? error
-        : new BadRequestException(i18n.t('global.global.INTERNAL_ERROR'));
+      throw error instanceof BadRequestException ? error : new BadRequestException(i18n.t('global.global.INTERNAL_ERROR'));
     }
   }
+
+  // @Get('blog')
+  // @ApiOperation({ summary: 'Get all blogs' })
+  // @ApiResponse({ status: 200, type: [Blog] })
+  // async findAll(@I18n() i18n: I18nContext): Promise<Blog[]> {
+  //   this.logger.log(`Fetching all blogs`);
+  //   try {
+  //     return await this.blogService.findAll();
+  //   } catch (error) {
+  //     this.logger.error(`Error fetching blogs: ${error.message}`, error.stack);
+  //     throw error instanceof BadRequestException
+  //       ? error
+  //       : new BadRequestException(i18n.t('global.global.INTERNAL_ERROR'));
+  //   }
+  // }
 
   @Get('blog/:id')
   @ApiOperation({ summary: 'Get blog by ID' })
