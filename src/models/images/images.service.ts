@@ -14,7 +14,7 @@ export class ImagesService {
     'public',
     'images',
   );
-  private readonly baseUrl = process.env.DOMAIN + 'images';
+  private readonly baseUrl = process.env.DOMAIN + '/images';
 
   async uploadImage(
     file: Express.Multer.File,
