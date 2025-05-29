@@ -1,14 +1,33 @@
-import { IsString, IsDate, MaxLength, IsNotEmpty, IsArray, IsOptional, Length, Validate } from 'class-validator';
+import {
+  IsString,
+  IsDate,
+  MaxLength,
+  IsNotEmpty,
+  IsArray,
+  IsOptional,
+  Length,
+  Validate,
+  IsEnum,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { SUPPORTED_LANGUAGES } from '../../config/languages';
 import { IsSupportedLanguageConstraint } from '../../common/validators/is-supported-language.validator';
 
+export enum BlogType {
+  Project = 1,
+  Achievements = 2,
+  Resources = 3,
+}
+
 export class BlogTranslationDto {
   @IsString()
   @IsNotEmpty()
   @Validate(IsSupportedLanguageConstraint)
-  @ApiProperty({ description: 'Language code (e.g., en, vi, fr, es, ja)', enum: SUPPORTED_LANGUAGES })
+  @ApiProperty({
+    description: 'Language code (e.g., en, vi, fr, es, ja)',
+    enum: SUPPORTED_LANGUAGES,
+  })
   language: string;
 
   @IsString()
@@ -45,7 +64,10 @@ export class DeleteTranslationDto {
   @IsString()
   @IsNotEmpty()
   @Validate(IsSupportedLanguageConstraint)
-  @ApiProperty({ description: 'Language code of translation to delete', enum: SUPPORTED_LANGUAGES })
+  @ApiProperty({
+    description: 'Language code of translation to delete',
+    enum: SUPPORTED_LANGUAGES,
+  })
   language: string;
 }
 
@@ -71,6 +93,14 @@ export class CreateBlogDto {
   @Type(() => Date)
   @ApiProperty({ example: '2025-03-03T00:00:00.000Z' })
   date: Date;
+
+  @IsEnum(BlogType)
+  @ApiProperty({
+    description: 'Type of blog (1: project, 2: achievements, 3: resources)',
+    enum: BlogType,
+    default: BlogType.Project,
+  })
+  type: BlogType;
 
   @IsArray()
   @ApiProperty({ type: [BlogTranslationDto] })
@@ -102,6 +132,15 @@ export class UpdateBlogDto {
   @Type(() => Date)
   @ApiProperty({ required: false, example: '2025-03-03T00:00:00.000Z' })
   date?: Date;
+
+  @IsEnum(BlogType)
+  @IsOptional()
+  @ApiProperty({
+    required: false,
+    description: 'Type of blog (1: project, 2: achievements, 3: resources)',
+    enum: BlogType,
+  })
+  type?: BlogType;
 
   @IsArray()
   @IsOptional()

@@ -29,7 +29,18 @@ export class Blog {
   @ApiProperty()
   date: Date;
 
-  @OneToMany(() => BlogTranslation, (translation) => translation.blog, { cascade: true, eager: true })
+  @Column({ type: 'enum', enum: [1, 2, 3], default: 1 })
+  @ApiProperty({
+    description: 'Type of blog (1: project, 2: achievements, 3: resources)',
+    enum: [1, 2, 3],
+    default: 1,
+  })
+  type: number;
+
+  @OneToMany(() => BlogTranslation, (translation) => translation.blog, {
+    cascade: true,
+    eager: true,
+  })
   @ApiProperty({ type: () => [BlogTranslation] })
   translations: BlogTranslation[];
 }
