@@ -1,5 +1,13 @@
 // src/member/member.dto.ts
-import { IsString, MaxLength, IsNotEmpty, IsArray, IsOptional, IsBoolean, IsUrl } from 'class-validator';
+import {
+  IsString,
+  MaxLength,
+  IsNotEmpty,
+  IsArray,
+  IsOptional,
+  IsBoolean,
+  IsUrl,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class MemberTranslationDto {
@@ -47,7 +55,10 @@ export class CreateMemberDto {
 
   @IsBoolean()
   @IsOptional()
-  @ApiProperty({ description: 'Indicates if the member is active', default: true })
+  @ApiProperty({
+    description: 'Indicates if the member is active',
+    default: true,
+  })
   isActive?: boolean;
 
   @IsUrl()
@@ -55,8 +66,16 @@ export class CreateMemberDto {
   @ApiProperty({ description: 'Canonical URL for SEO', required: false })
   canonicalUrl?: string;
 
+  @IsBoolean()
+  @IsOptional()
+  @ApiProperty({ description: 'Is core member?', default: false })
+  core?: boolean;
+
   @IsArray()
-  @ApiProperty({ type: [MemberTranslationDto], description: 'List of translations' })
+  @ApiProperty({
+    type: [MemberTranslationDto],
+    description: 'List of translations',
+  })
   translations: MemberTranslationDto[];
 }
 
@@ -73,8 +92,16 @@ export class UpdateMemberDto {
 
   @IsBoolean()
   @IsOptional()
-  @ApiProperty({ description: 'Indicates if the member is active', required: false })
+  @ApiProperty({
+    description: 'Indicates if the member is active',
+    required: false,
+  })
   isActive?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  @ApiProperty({ description: 'Is core member?', default: false })
+  core?: boolean;
 
   @IsUrl()
   @IsOptional()
@@ -83,6 +110,10 @@ export class UpdateMemberDto {
 
   @IsArray()
   @IsOptional()
-  @ApiProperty({ type: [MemberTranslationDto], required: false, description: 'List of translations' })
+  @ApiProperty({
+    type: [MemberTranslationDto],
+    required: false,
+    description: 'List of translations',
+  })
   translations?: MemberTranslationDto[];
 }

@@ -1,5 +1,12 @@
 // src/member/entity/member.entity.ts
-import { Entity, Column, PrimaryGeneratedColumn, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  OneToMany,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { MemberTranslation } from './member-translation.entity';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -25,6 +32,10 @@ export class Member {
   @ApiProperty({ description: 'Canonical URL for SEO', required: false })
   canonicalUrl: string;
 
+  @Column({ default: false })
+  @ApiProperty({ description: 'Is core member?', default: false })
+  core: boolean;
+
   @CreateDateColumn()
   @ApiProperty({ description: 'Timestamp when the member was created' })
   createdAt: Date;
@@ -34,6 +45,10 @@ export class Member {
   updatedAt: Date;
 
   @OneToMany(() => MemberTranslation, (translation) => translation.member)
-  @ApiProperty({ type: () => MemberTranslation, isArray: true, description: 'List of translations for the member' })
+  @ApiProperty({
+    type: () => MemberTranslation,
+    isArray: true,
+    description: 'List of translations for the member',
+  })
   translations: MemberTranslation[];
 }
