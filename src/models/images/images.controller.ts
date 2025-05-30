@@ -31,10 +31,10 @@ export class ImagesController {
     return this.imagesService.uploadImage(file);
   }
 
- @Get()
+  @Get()
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiQuery({ name: 'filename', required: false, type: String }) 
+  @ApiQuery({ name: 'filename', required: false, type: String })
   async findAll(
     @Query('page') page: string,
     @Query('limit') limit: string,
@@ -50,8 +50,8 @@ export class ImagesController {
     return this.imagesService.findAll(parsedPage, parsedLimit, filename);
   }
 
-  @Delete(':filename')
-  async delete(@Param('filename') filename: string): Promise<void> {
-    return this.imagesService.delete(filename);
+  @Delete(':publicId')
+  async delete(@Param('publicId') publicId: string): Promise<void> {
+    return this.imagesService.delete(publicId);
   }
 }

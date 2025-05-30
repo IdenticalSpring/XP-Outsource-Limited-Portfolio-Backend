@@ -13,10 +13,16 @@ import * as path from 'path';
 import { SitemapModule } from './models/sitemap/sitemap.module';
 import { ImagesModule } from './models/images/images.module';
 import { EmailModule } from './email/email.module';
+import cloudinaryConfig from './config/cloudinary.config';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      load: [
+        cloudinaryConfig,
+      ],
+      isGlobal: true,
+    }),
     I18nModule.forRoot({
       fallbackLanguage: 'en',
       loaderOptions: {

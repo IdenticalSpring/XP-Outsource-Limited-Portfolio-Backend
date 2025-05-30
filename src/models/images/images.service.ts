@@ -1,35 +1,54 @@
-// backend/src/models/images/images.service.ts
 import { Injectable, BadRequestException } from '@nestjs/common';
-import * as fs from 'fs/promises';
-import * as path from 'path';
-import { v4 as uuidv4 } from 'uuid';
+import { CloudinaryService } from 'nestjs-cloudinary';
+
+interface CloudinaryUploadResult {
+  public_id: string;
+  secure_url: string;
+  url?: string;
+  asset_id?: string;
+  format?: string;
+}
+
+interface CloudinaryResource {
+  public_id: string;
+  secure_url: string;
+  url?: string;
+  format?: string;
+  created_at?: string;
+  width?: number;
+  height?: number;
+}
+
+interface CloudinaryResourcesResult {
+  resources: CloudinaryResource[];
+  next_cursor?: string;
+  total_count?: number;
+}
+
+interface UploadImageResult {
+  filename: string;
+  url: string;
+  publicId: string;
+}
 
 @Injectable()
 export class ImagesService {
-  private readonly publicImagesPath = path.join(
-    __dirname,
-    '..',
-    '..',
-    '..',
-    'public',
-    'images',
-  );
-  private readonly baseUrl = process.env.DOMAIN + '/images';
+  constructor(private readonly cloudinaryService: CloudinaryService) {}
 
-  async uploadImage(
-    file: Express.Multer.File,
-  ): Promise<{ filename: string; url: string }> {
+  async uploadImage(file: Express.Multer.File): Promise<UploadImageResult> {
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }
-    await fs.mkdir(this.publicImagesPath, { recursive: true });
-    const filename = `${uuidv4()}-${file.originalname}`;
-    const filePath = path.join(this.publicImagesPath, filename);
-    await fs.writeFile(filePath, file.buffer);
+    const result = await this.cloudinaryService.uploadFile(file, {
+      folder: 'portfolio', 
+    }) as CloudinaryUploadResult;
 
+    const parts = result.public_id.split('/');
+    const filename = parts[parts.length - 1];
     return {
-      filename,
-      url: `${this.baseUrl}/${filename}`,
+      filename: filename,
+      url: result.secure_url,
+      publicId: result.public_id, 
     };
   }
 
@@ -37,25 +56,37 @@ export class ImagesService {
     page: number = 1,
     limit: number = 10,
     filename?: string,
-  ): Promise<{ data: { filename: string; url: string }[]; total: number }> {
+  ): Promise<{ data: { filename: string; url: string; publicId: string }[]; total: number }> {
     try {
-      let files = await fs.readdir(this.publicImagesPath);
-
+      const result = await this.getAllImagesFromFolder('portfolio', { 
+        max_results: filename ? 500 : limit * 2,
+      }) as CloudinaryResourcesResult;
+      
+      let resources = result.resources || [];
       if (filename) {
         const searchTerm = filename.toLowerCase();
-        files = files.filter((file) => file.toLowerCase().includes(searchTerm));
+        resources = resources.filter(resource => {
+          const parts = resource.public_id.split('/');
+          const name = parts[parts.length - 1].toLowerCase();
+          return name.includes(searchTerm);
+        });
       }
 
-      const total = files.length;
-
+      const total = resources.length;
       const start = (page - 1) * limit;
       const end = start + limit;
-      const paginatedFiles = files.slice(start, end);
+      const paginatedResources = resources.slice(start, end);
 
-      const data = paginatedFiles.map((filename) => ({
-        filename,
-        url: `${this.baseUrl}/${filename}`,
-      }));
+      const data = paginatedResources.map(resource => {
+        const parts = resource.public_id.split('/');
+        const filename = parts[parts.length - 1];
+        
+        return {
+          filename,
+          url: resource.secure_url || resource.url,
+          publicId: resource.public_id,
+        };
+      });
 
       return { data, total };
     } catch (error) {
@@ -63,12 +94,37 @@ export class ImagesService {
     }
   }
 
-  async delete(filename: string): Promise<void> {
-    const filePath = path.join(this.publicImagesPath, filename);
+  async delete(publicId: string): Promise<void> {
     try {
-      await fs.unlink(filePath);
+      await this.deleteImage(publicId);
     } catch (error) {
       throw new BadRequestException('Image not found');
     }
+  }
+
+  async deleteImage(publicId: string) {
+    return new Promise((resolve, reject) => {
+      this.cloudinaryService.cloudinary.uploader.destroy(publicId, (error, result) => {
+        if (error) return reject(error);
+        return resolve(result);
+      });
+    });
+  }
+
+  async getAllImagesFromFolder(folder: string = 'portfolio', options: any = {}): Promise<CloudinaryResourcesResult> {
+    return new Promise((resolve, reject) => {
+      this.cloudinaryService.cloudinary.api.resources(
+        {
+          type: 'upload',
+          prefix: folder,
+          max_results: options.max_results || 100,
+          ...options
+        },
+        (error, result) => {
+          if (error) return reject(error);
+          return resolve(result as CloudinaryResourcesResult);
+        }
+      );
+    });
   }
 }
